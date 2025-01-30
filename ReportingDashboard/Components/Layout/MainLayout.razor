@@ -1,0 +1,73 @@
+﻿@inherits LayoutComponentBase
+
+<MudThemeProvider @bind-IsDarkMode="_isDarkMode" Theme="_theme" />
+<MudDialogProvider />
+<MudSnackbarProvider />
+<MudPopoverProvider />
+
+<MudLayout>
+    <MudAppBar Color="Color.Primary" Elevation="4">
+        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="ToggleDrawer" />
+        <MudText Typo="Typo.h6">Reporting Dashboard</MudText>
+        <MudChip T="string" Color="Color.Secondary" Size="Size.Small" Class="ms-2">@_version</MudChip>
+        <MudSpacer />
+        <MudToggleIconButton @bind-Toggled="_isDarkMode" Icon="@Icons.Material.Filled.DarkMode" ToggledIcon="@Icons.Material.Filled.WbSunny" />
+    </MudAppBar>
+    <MudDrawer @bind-Open="_drawerOpen" ClipMode="DrawerClipMode.Always" Elevation="4" Variant="DrawerVariant.Mini">
+        <MudNavMenu Class="nav-menu">
+            <MudNavGroup Title="Warehouse" Icon="@Icons.Material.Filled.House" HideExpandIcon="@(!_drawerOpen)" Expanded="true">
+                <MudNavLink Href="/warehouse-dashboard" Icon="@Icons.Material.Filled.DashboardCustomize" IconColor="Color.Primary">Dashboard</MudNavLink>
+                <MudNavLink Href="/warehouse-configuration" Icon="@Icons.Material.Filled.Construction" IconColor="Color.Primary">Configuration</MudNavLink>
+            </MudNavGroup>
+            <MudNavLink Icon="@Icons.Material.Filled.Settings" IconColor="Color.Primary" Class="bottom-align" OnClick="ShowSettingsDialog">Settings</MudNavLink>
+        </MudNavMenu>
+    </MudDrawer>
+    <MudMainContent>
+        <div>
+            @Body
+        </div>
+    </MudMainContent>
+</MudLayout>
+
+<div id="blazor-error-ui" data-nosnippet>
+    An unhandled error has occurred.
+    <a href="." class="reload">Reload</a>
+    <span class="dismiss">🗙</span>
+</div>
+
+@code {
+    [Inject]
+    public required IDialogService Dialog { get; set; }
+
+    private bool _drawerOpen = false;
+    private bool _isDarkMode = true;
+
+    private string? _version = Assembly.GetEntryAssembly()
+    ?.GetCustomAttributes<AssemblyInformationalVersionAttribute>()
+    ?.Select(x => x.InformationalVersion).First();
+
+    private MudTheme _theme = new MudTheme()
+    {
+        PaletteDark = new PaletteDark()
+        {
+            Primary = Colors.Blue.Darken4,
+            Secondary = Colors.Orange.Lighten1
+        },
+
+        PaletteLight = new PaletteLight()
+        {
+            Primary = Colors.Blue.Darken4,
+            Secondary = Colors.Orange.Lighten1
+        }
+    };
+
+    private void ToggleDrawer() => _drawerOpen = !_drawerOpen;
+
+    private Task ShowSettingsDialog() 
+    {
+        return Dialog.ShowAsync<MudDialog>("Settings", new DialogOptions() 
+        { 
+            Position = DialogPosition.TopCenter
+        });
+    }
+}

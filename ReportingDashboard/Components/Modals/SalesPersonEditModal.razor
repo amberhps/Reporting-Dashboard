@@ -1,0 +1,185 @@
+﻿<MudTable 
+Items="@SalesPerson.SalesDesignations" 
+CanCancelEdit
+RowEditCancel="RevertChanges"
+OnCommitEditClick="SaveChanges"
+@ref="DesignationTable">
+    <ColGroup>
+        <col style="width: 60%" />
+        <col />
+        <col />
+    </ColGroup>
+    <HeaderContent>
+        <MudTh>Configuration</MudTh>
+        <MudTh>Effective Start Date</MudTh>
+        <MudTh>
+            <MudStack Row>
+                Effective End Date
+                <MudSpacer />
+                <MudIconButton Icon="@Icons.Material.Filled.Add" OnClick="AddSalesDesignation">Add</MudIconButton>
+            </MudStack>
+        </MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd>
+            <MudGrid Spacing="1">
+                <MudItem xs="12">
+                    <MudPaper Elevation="2">
+                        <MudStack Row Spacing="0">
+                            <MudChip T="string" Color="Color.Primary">@context.SalesDesignationName</MudChip>
+                            <MudDivider Vertical FlexItem />
+                            <MudStack Row Spacing="0" Wrap="Wrap.Wrap">
+                                @foreach (var state in context.SalesPersonStates)
+                                {
+                                    <MudChip T="string" Size="Size.Small">@state.State</MudChip>
+                                }
+                            </MudStack>
+                        </MudStack>
+                    </MudPaper>
+                </MudItem>
+            </MudGrid>
+        </MudTd>
+        <MudTd>@context.EffectiveStartDate?.ToString("MM/dd/yyyy")</MudTd>
+        <MudTd>
+            <MudStack Row>
+                @context.EffectiveEndDate?.ToString("MM/dd/yyyy")
+                <MudSpacer/>
+                <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="() => DeleteSalesDesignation(context)" />
+            </MudStack>
+        </MudTd>
+    </RowTemplate>
+    <RowEditingTemplate>
+        <MudTd>
+            @{
+                var stateOptions = StateOptions.Select(x => new StateSelector 
+                { 
+                    State = x,
+                    Zone = context.SalesPersonStates.Select(y => y.State).Contains(x) ? "ActiveZone" : "InactiveZone"
+                }).ToList();
+            }
+            <MudSelect T="string" @bind-Value="context.SalesDesignationName" Variant="Variant.Outlined" Label="Sales Designation" Required>
+                @foreach (var designation in DesignationOptions)
+                {
+                    <MudSelectItem Value="@designation">@designation</MudSelectItem>
+                }
+            </MudSelect>
+            <MudDropContainer T="StateSelector" Items="stateOptions" ItemsSelector="(x, y) => x.Zone == y" Class="d-flex flex-wrap flex-grow-1" ItemDropped="x => ItemUpdated(x, context)">
+                <ChildContent>
+                    <MudPaper Elevation="4" Class="mt-3">
+                        <MudListSubheader>Active States</MudListSubheader>
+                        <MudDropZone T="StateSelector" Identifier="ActiveZone" Class="d-flex flex-wrap flex-grow-1 pa-2" />
+                    </MudPaper>
+                    <MudPaper Elevation="4" Class="mt-3">
+                        <MudListSubheader>Available States</MudListSubheader>
+                        <MudDropZone T="StateSelector" Identifier="InactiveZone" Class="d-flex flex-wrap flex-grow-1 pa-2"/>
+                    </MudPaper>
+                </ChildContent>
+                <ItemRenderer Context="DragContext">
+                    <MudChip T="StateSelector" Color="@(DragContext.Zone == "ActiveZone" ? Color.Primary : Color.Default)" Size="Size.Small">@DragContext.State</MudChip>
+                </ItemRenderer>
+            </MudDropContainer>
+        </MudTd>
+        <MudTd>
+            <MudDatePicker @bind-Date="context.EffectiveStartDate" Required />
+        </MudTd>
+        <MudTd>
+            <MudDatePicker @bind-Date="context.EffectiveEndDate" Required />
+        </MudTd>
+    </RowEditingTemplate>
+</MudTable>
+
+@code {
+    [Parameter]
+    public required SalesPerson SalesPerson { get; set; }
+
+    [Parameter]
+    public required CaretendContext Context { get; set; }
+
+    [CascadingParameter] 
+    public required IMudDialogInstance MudDialog { get; set; }
+
+    [Inject]
+    public required IDialogService Dialog { get; set; }
+
+    private static List<string> DesignationOptions = ["SP", "TP"];
+    private static List<string> StateOptions = [];
+
+    public required MudTable<SalesDesignation> DesignationTable { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        StateOptions = Context.StateLookup
+            .Where(x => x.Country_Id == 1)
+            .Select(x => x.Name)
+            .AsNoTracking()
+            .ToList();
+
+        await base.OnInitializedAsync();
+    }
+
+    private void ItemUpdated(MudItemDropInfo<StateSelector> dropItem, SalesDesignation designation)
+    {
+        if (dropItem.Item == null) 
+            return;
+
+        if (dropItem.DropzoneIdentifier == "ActiveZone" && dropItem.Item.Zone != "ActiveZone")
+        {
+            designation.SalesPersonStates.Add(new SalesPersonState
+            {
+                State = dropItem.Item.State,
+                EffectiveStartDate = DateTime.Now,
+                EffectiveEndDate = DateTime.MaxValue,
+            });
+        } 
+        else if (dropItem.DropzoneIdentifier == "InactiveZone" && dropItem.Item.Zone != "InactiveZone")
+        {
+            designation.SalesPersonStates.Remove(designation.SalesPersonStates.First(x => x.State == dropItem.Item.State));
+        }
+    }
+
+    private async Task AddSalesDesignation() 
+    {
+        var newDesignation = new SalesDesignation
+        {
+            SalesPerson_Id = SalesPerson.Id,
+            EffectiveStartDate = DateTime.Now,
+            EffectiveEndDate = DateTime.MaxValue,
+            SalesPerson = SalesPerson,
+        };
+
+        SalesPerson.SalesDesignations.Add(newDesignation);
+        await Task.Delay(50);
+        DesignationTable.SetSelectedItem(newDesignation);
+        DesignationTable.SetEditingItem(newDesignation);
+
+        StateHasChanged();
+    }
+
+    private async Task DeleteSalesDesignation(SalesDesignation designation) 
+    {
+        var result = await Dialog.ShowMessageBox("Warning", "Are you sure you want to delete this entry?", yesText: "Proceed", cancelText: "Cancel") ?? false;
+
+        if (!result)
+        {
+            return;
+        }
+
+        SalesPerson.SalesDesignations.Remove(designation);
+        Context.SaveChanges();
+        StateHasChanged();
+    }
+
+    private void RevertChanges(object? input) 
+    {
+        Context.RevertChanges();
+        StateHasChanged();
+    }
+
+    private void SaveChanges() => Context.SaveChanges();
+
+    private class StateSelector() 
+    {
+        public required string State { get; set; }
+        public required string Zone { get; set; }
+    }
+}
