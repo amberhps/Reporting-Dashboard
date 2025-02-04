@@ -1,0 +1,55 @@
+﻿@page "/jobs"
+
+<MudTable Items="MissingSSISRuns" Loading="_loading" GroupBy="_jobGroups" Dense>
+    <HeaderContent>
+        <MudTh>Job Name</MudTh>
+        <MudTh>Schedule Name</MudTh>
+        <MudTh>Missed Run Date</MudTh>
+    </HeaderContent>
+    <GroupHeaderTemplate>
+        <MudTd colspan="3">
+            <MudText Class="mt-4">
+                @($"{context.Key} Missed Runs")
+                <MudBadge Color="Color.Secondary" Content="@context.Items.Count()" Class="ms-2"/>
+            </MudText>
+        </MudTd>
+    </GroupHeaderTemplate>
+    <RowTemplate>
+        <MudTd DataLabel="Job Name">@context.JobName</MudTd>
+        <MudTd DataLabel="Schedule Name">@context.ScheduleName</MudTd>
+        <MudTd DataLabel="Missed Run Date">@context.MissedRunDate</MudTd>
+    </RowTemplate>
+</MudTable>
+
+@code {
+    [Inject]
+    public required SSISContext Context { get; set; }
+
+    private List<MissingSSISRun> MissingSSISRuns { get; set; } = [];
+    private TableGroupDefinition<MissingSSISRun> _jobGroups = new() 
+    { 
+        Selector = x => 
+        {
+            var _now = DateTime.Now;
+            if (x.MissedRunDate > _now.AddHours(-24) && x.MissedRunDate <= _now) 
+                return "New";
+            else if (x.MissedRunDate > _now.AddDays(-7) && x.MissedRunDate <= _now.AddHours(-24))
+                return "Recent";
+            else
+                return "Old";
+        }
+    };
+
+    public bool _loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var missing = await Context.Connection.QueryAsync<MissingSSISRun>(
+            "MissedSSISRuns", 
+            commandType: System.Data.CommandType.StoredProcedure
+        );
+
+        MissingSSISRuns = missing.OrderByDescending(x => x.MissedRunDate).ToList();
+        _loading = false;
+    }
+}

@@ -2,8 +2,9 @@
 {
     public class AppSettings
     {
-        public required string WarehouseProd { get; set; }
-        public required string WarehouseTest { get; set; }
-        public required string CareTendTest { get; set; }
+        public required string WarehouseProd { get; init; }
+        public required string WarehouseTest { get; init; }
+        public required string CareTendTest { get; init; }
+        public required string SSIS { get; init; }
     }
 }

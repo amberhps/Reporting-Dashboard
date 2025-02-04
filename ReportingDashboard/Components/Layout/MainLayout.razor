@@ -11,14 +11,15 @@
         <MudText Typo="Typo.h6">Reporting Dashboard</MudText>
         <MudChip T="string" Color="Color.Secondary" Size="Size.Small" Class="ms-2">@_version</MudChip>
         <MudSpacer />
-        <MudToggleIconButton @bind-Toggled="_isDarkMode" Icon="@Icons.Material.Filled.DarkMode" ToggledIcon="@Icons.Material.Filled.WbSunny" />
+        <MudToggleIconButton @bind-Toggled="_isDarkMode" Icon="@Icons.Material.Rounded.DarkMode" ToggledIcon="@Icons.Material.Rounded.WbSunny" />
     </MudAppBar>
     <MudDrawer @bind-Open="_drawerOpen" ClipMode="DrawerClipMode.Always" Elevation="4" Variant="DrawerVariant.Mini">
         <MudNavMenu Class="nav-menu">
-            <MudNavGroup Title="Warehouse" Icon="@Icons.Material.Filled.House" HideExpandIcon="@(!_drawerOpen)" Expanded="true">
-                <MudNavLink Href="/warehouse-dashboard" Icon="@Icons.Material.Filled.DashboardCustomize" IconColor="Color.Primary">Dashboard</MudNavLink>
-                <MudNavLink Href="/warehouse-configuration" Icon="@Icons.Material.Filled.Construction" IconColor="Color.Primary">Configuration</MudNavLink>
+            <MudNavGroup Title="Warehouse" Icon="@Icons.Material.Rounded.House" HideExpandIcon="@(!_drawerOpen)" Expanded="true">
+                <MudNavLink Href="/warehouse-dashboard" Icon="@Icons.Material.Rounded.DashboardCustomize" IconColor="Color.Primary">Dashboard</MudNavLink>
+                <MudNavLink Href="/warehouse-configuration" Icon="@Icons.Material.Rounded.Construction" IconColor="Color.Primary">Configuration</MudNavLink>
             </MudNavGroup>
+            <MudNavLink Href="/jobs" Icon="@Icons.Material.Rounded.AccessTime" IconColor="Color.Primary">Jobs</MudNavLink>
             <MudNavLink Icon="@Icons.Material.Filled.Settings" IconColor="Color.Primary" Class="bottom-align" OnClick="ShowSettingsDialog">Settings</MudNavLink>
         </MudNavMenu>
     </MudDrawer>
@@ -44,7 +45,8 @@
 
     private string? _version = Assembly.GetEntryAssembly()
     ?.GetCustomAttributes<AssemblyInformationalVersionAttribute>()
-    ?.Select(x => x.InformationalVersion).First();
+    ?.Select(x => x.InformationalVersion).First()
+    .Split("+")[0];
 
     private MudTheme _theme = new MudTheme()
     {

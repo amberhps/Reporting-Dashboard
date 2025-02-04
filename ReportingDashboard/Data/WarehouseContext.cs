@@ -6,40 +6,18 @@ using System.Data;
 
 namespace ReportingDashboard.Data
 {
-    public class WarehouseContext(IOptions<AppSettings> settingSnapshot) : IDisposable
+    public class WarehouseContext(IOptions<AppSettings> settingSnapshot) : BaseContext
     {
         private readonly AppSettings _settings = settingSnapshot.Value;
 
-        private SqlConnection? _connection;
-        private IDbTransaction? _transaction;
+        private readonly Lock _lock = new();
 
-        private bool _disposed = false;
-        public IDbConnection Connection => _connection ??= new SqlConnection(
+        public override IDbConnection Connection => _connection ??= new SqlConnection(
             Environment == WarehouseEnvironment.Test ?
             _settings.WarehouseTest :
             _settings.WarehouseProd);
 
-        public IDbTransaction? Transaction => _transaction;
-
         public WarehouseEnvironment Environment { get; private set; } = WarehouseEnvironment.Test;
-
-        private readonly Lock _lock = new();
-
-        public IDbTransaction BeginTransaction() => _transaction ??= Connection.BeginTransaction();
-
-        public void Commit()
-        {
-            _transaction?.Commit();
-            _transaction?.Dispose();
-            _transaction = null;
-        }
-
-        public void RollBack()
-        {
-            _transaction?.Rollback();
-            _transaction?.Dispose();
-            _transaction = null;
-        }
 
         public void SwitchEnvironment()
         {
@@ -54,42 +32,6 @@ namespace ReportingDashboard.Data
 
                 Environment = Environment == WarehouseEnvironment.Test ? WarehouseEnvironment.Prod : WarehouseEnvironment.Test;
             }
-        }
-        public virtual void Dispose()
-        {
-            InternalDispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        protected void InternalDispose(bool disposing)
-        {
-            if (_disposed)
-                return;
-
-            if (!disposing)
-            {
-                _disposed = true;
-                return;
-            }
-
-            if (_transaction != null)
-            {
-                _transaction.Dispose();
-                _transaction = null;
-            }
-
-            if (_connection != null)
-            {
-                _connection.Dispose();
-                _connection = null;
-            }
-
-            _disposed = true;
-        }
-
-        ~WarehouseContext()
-        {
-            InternalDispose(false);
         }
     }
 }

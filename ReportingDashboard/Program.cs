@@ -20,6 +20,7 @@ namespace ReportingDashboard
 
             builder.Services.Configure<AppSettings>(builder.Configuration.GetSection("ConnectionStrings"));
             builder.Services.AddScoped<WarehouseContext>();
+            builder.Services.AddScoped<SSISContext>();
             builder.Services.AddDbContextFactory<CaretendContext>();
 
             var app = builder.Build();
