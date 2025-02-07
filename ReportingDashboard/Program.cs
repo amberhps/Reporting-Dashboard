@@ -2,7 +2,6 @@ using ReportingDashboard.Components;
 using MudBlazor.Services;
 using ReportingDashboard.Data.Models;
 using ReportingDashboard.Data;
-using Microsoft.AspNetCore.Components.Server.Circuits;
 
 namespace ReportingDashboard
 {

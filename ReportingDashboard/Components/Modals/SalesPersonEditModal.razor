@@ -1,8 +1,10 @@
 ﻿<MudTable 
-Items="@SalesPerson.SalesDesignations" 
+Items="SalesPerson.SalesDesignations.OrderByDescending(x => x.EffectiveEndDate)"
+GroupBy="DesignationsGroups"
 CanCancelEdit
-RowEditCancel="RevertChanges"
 OnCommitEditClick="SaveChanges"
+OnCancelEditClick="RevertChanges"
+OnPreviewEditClick="OnEdit"
 @ref="DesignationTable">
     <ColGroup>
         <col style="width: 60%" />
@@ -16,10 +18,18 @@ OnCommitEditClick="SaveChanges"
             <MudStack Row>
                 Effective End Date
                 <MudSpacer />
-                <MudIconButton Icon="@Icons.Material.Filled.Add" OnClick="AddSalesDesignation">Add</MudIconButton>
+                <MudIconButton Icon="@Icons.Material.Filled.Add" OnClick="AddSalesDesignation" Disabled="@IsEditing" />
             </MudStack>
         </MudTh>
     </HeaderContent>
+    <GroupHeaderTemplate>
+        <MudTd colspan="3">
+            <MudText Class="@(context.Key?.ToString() != "Current" ? "mt-4": "")">
+                @($"{context.Key} Configurations")
+                <MudBadge Color="Color.Secondary" Content="@context.Items.Count()" Class="ms-2" />
+            </MudText>
+        </MudTd>
+    </GroupHeaderTemplate>
     <RowTemplate>
         <MudTd>
             <MudGrid Spacing="1">
@@ -63,7 +73,7 @@ OnCommitEditClick="SaveChanges"
                     <MudSelectItem Value="@designation">@designation</MudSelectItem>
                 }
             </MudSelect>
-            <MudDropContainer T="StateSelector" Items="stateOptions" ItemsSelector="(x, y) => x.Zone == y" Class="d-flex flex-wrap flex-grow-1" ItemDropped="x => ItemUpdated(x, context)">
+            <MudDropContainer T="StateSelector" Items="stateOptions" ItemsSelector="(x, y) => x.Zone == y" Class="d-flex flex-wrap flex-grow-1" ItemDropped="(x) => ItemUpdated(x, context)">
                 <ChildContent>
                     <MudPaper Elevation="4" Class="mt-3">
                         <MudListSubheader>Active States</MudListSubheader>
@@ -83,7 +93,10 @@ OnCommitEditClick="SaveChanges"
             <MudDatePicker @bind-Date="context.EffectiveStartDate" Required />
         </MudTd>
         <MudTd>
-            <MudDatePicker @bind-Date="context.EffectiveEndDate" Required />
+            <MudStack Row>
+                <MudDatePicker @bind-Date="context.EffectiveEndDate" Required Disabled="@(DisableDates || context.EffectiveEndDate?.Date == DateTime.MaxValue.Date)" />
+                <MudIconButton Icon="@Icons.Material.Rounded.Loop" OnClick="() => SwitchDates(context)" />
+            </MudStack>
         </MudTd>
     </RowEditingTemplate>
 </MudTable>
@@ -106,6 +119,20 @@ OnCommitEditClick="SaveChanges"
 
     public required MudTable<SalesDesignation> DesignationTable { get; set; }
 
+    public bool IsEditing = false;
+    public bool DisableDates = false;
+
+    private TableGroupDefinition<SalesDesignation> DesignationsGroups = new()
+    {
+        Selector = x =>
+        {
+            if (x.EffectiveEndDate?.Date == DateTime.MaxValue.Date)
+                return "Current";
+            else
+                return "Past";
+        }
+    };
+
     protected override async Task OnInitializedAsync()
     {
         StateOptions = Context.StateLookup
@@ -115,6 +142,30 @@ OnCommitEditClick="SaveChanges"
             .ToList();
 
         await base.OnInitializedAsync();
+    }
+
+    private async Task OnEdit(object? input) 
+    {
+        IsEditing = true;
+        if (input is SalesDesignation designation) 
+        {
+            DisableDates = designation.EffectiveEndDate?.Date == DateTime.MaxValue.Date;
+        }
+        await DisableClose();
+    }
+
+    private void SwitchDates(SalesDesignation designation)
+    {
+        if (designation.EffectiveEndDate?.Date != DateTime.MaxValue.Date) 
+        {
+            designation.EffectiveEndDate = DateTime.MaxValue;
+        } 
+        else 
+        {
+            designation.EffectiveEndDate = DateTime.Now;
+        }
+
+        StateHasChanged();
     }
 
     private void ItemUpdated(MudItemDropInfo<StateSelector> dropItem, SalesDesignation designation)
@@ -151,7 +202,15 @@ OnCommitEditClick="SaveChanges"
         await Task.Delay(50);
         DesignationTable.SetSelectedItem(newDesignation);
         DesignationTable.SetEditingItem(newDesignation);
+        IsEditing = true;
 
+        var options = new DialogOptions()
+        {
+            FullWidth = true,
+            FullScreen = true
+        };
+
+        await MudDialog.SetOptionsAsync(options);
         StateHasChanged();
     }
 
@@ -169,13 +228,52 @@ OnCommitEditClick="SaveChanges"
         StateHasChanged();
     }
 
-    private void RevertChanges(object? input) 
+    private async Task RevertChanges(object? input) 
     {
         Context.RevertChanges();
+        IsEditing = false;
+
+        var options = new DialogOptions()
+        {
+            FullWidth = true,
+            CloseButton = true,
+            FullScreen = true
+        };
+
+        await MudDialog.SetOptionsAsync(options);
         StateHasChanged();
     }
 
-    private void SaveChanges() => Context.SaveChanges();
+    private async Task SaveChanges() 
+    { 
+        Context.SaveChanges();
+        IsEditing = false;
+        await EnableClose();
+        StateHasChanged();
+    }
+
+    private async Task DisableClose() 
+    {
+        var options = new DialogOptions()
+        {
+            FullWidth = true,
+            FullScreen = true
+        };
+
+        await MudDialog.SetOptionsAsync(options);
+    }
+
+    private async Task EnableClose()
+    {
+        var options = new DialogOptions()
+        {
+            FullWidth = true,
+            CloseButton = true,
+            FullScreen = true
+        };
+
+        await MudDialog.SetOptionsAsync(options);
+    }
 
     private class StateSelector() 
     {

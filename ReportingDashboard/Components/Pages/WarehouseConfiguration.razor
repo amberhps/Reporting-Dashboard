@@ -4,12 +4,12 @@
     <MudExpansionPanel Text="Service Area Designations" ExpandedChanged="OnServiceAreaOpened">
         <MudTable Items="ServiceAreaDesignations"
         Loading="@IsServiceAreaDesignationsLoading"
-        Dense="true"
+        Dense
         Filter="FilterServiceArea"
-        Hover="true"
+        Hover
         EditTrigger="TableEditTrigger.RowClick"
         ApplyButtonPosition="TableApplyButtonPosition.End"
-        CanCancelEdit="true"
+        CanCancelEdit
         OnPreviewEditClick="() => IsServiceAreaEditing = true"
         RowEditCancel="CancelServiceAreaChanges"
         OnCommitEditClick="CommitChanges"
@@ -185,7 +185,12 @@
         <MudTable 
         Items="SalesPersons"
         Loading="@IsSalesPersonLoading"
-        Hover="true">
+        CanCancelEdit
+        OnPreviewEditClick="() => IsSalesPersonEditing = true"
+        OnCommitEditClick="CommitChanges"
+        RowEditCancel="CancelSalesPersonChanges"
+        Hover="true"
+        @ref="SalesPersonTable">
             <ColGroup>
                 <col />
                 <col style="width: 50%;" />
@@ -196,18 +201,24 @@
                 <MudTh>Sales Person Name</MudTh>
                 <MudTh>Configuration</MudTh>
                 <MudTh>Effective Start Date</MudTh>
-                <MudTh>Effective End Date</MudTh>
+                <MudTh>
+                    <MudStack Row>
+                        Effective End Date
+                        <MudSpacer/>
+                        <MudIconButton Icon="@Icons.Material.Rounded.Add" OnClick="AddSalesPerson" />
+                    </MudStack>
+                </MudTh>
             </HeaderContent>
             <RowTemplate>
                 <MudTd>
                     <MudStack Row Spacing="1">
-                        <MudAvatar Size="Size.Small">@context.SalesPersonName.First()</MudAvatar>
+                        <MudAvatar Size="Size.Small">@context.SalesPersonName.FirstOrDefault()</MudAvatar>
                         <MudText Typo="Typo.body2">@context.SalesPersonName</MudText>
                     </MudStack>
                 </MudTd>
                 <MudTd>
                     <MudGrid Spacing="1">
-                        @foreach(var designation in context.SalesDesignations) 
+                        @foreach(var designation in context.SalesDesignations.Where(x => x.EffectiveEndDate?.Date == DateTime.MaxValue.Date)) 
                         {
                             <MudItem xs="12">
                                 <MudPaper Elevation="2">
@@ -231,10 +242,25 @@
                     <MudStack Row>
                         @context.EffectiveEndDate?.ToString("MM/dd/yyyy")
                         <MudSpacer />
-                        <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" OnClick="() => EditSalesPerson(context)" />
+                        <MudIconButton Icon="@Icons.Material.Filled.Edit" OnClick="() => EditSalesPerson(context)" />
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="() => DeleteSalesPerson(context)"/>
                     </MudStack>
                 </MudTd>
             </RowTemplate>
+            <RowEditingTemplate>
+                <MudTd colspan="2">
+                    <MudTextField @bind-Value="context.SalesPersonName" Required />
+                </MudTd>
+                <MudTd>
+                    <MudDatePicker @bind-Date="context.EffectiveStartDate" Required />
+                </MudTd>
+                <MudTd>
+                    <MudStack Row>
+                        <MudDatePicker @bind-Date="context.EffectiveEndDate" Required />
+                        <MudIconButton Icon="@Icons.Material.Rounded.Loop" OnClick="() => SwitchDates(context)" />
+                    </MudStack>
+                </MudTd>
+            </RowEditingTemplate>
         </MudTable>
     </MudExpansionPanel>
 </MudExpansionPanels>
@@ -525,6 +551,67 @@
 
         var dialog = await Dialog.ShowAsync<SalesPersonEditModal>(salesPerson.SalesPersonName, parameters, options);
         var result = await dialog.Result;
+    }
+
+    private void CancelSalesPersonChanges(object? input)
+    {
+        Context.RevertChanges();
+
+        IsSalesPersonEditing = false;
+
+        var salesPerson = (SalesPerson?)input;
+        if (salesPerson != null && salesPerson.Id == 0)
+        {
+            SalesPersons.Remove(salesPerson);
+        }
+
+        StateHasChanged();
+    }
+
+    private void SwitchDates(SalesPerson salesPerson)
+    {
+        if (salesPerson.EffectiveEndDate?.Date != DateTime.MaxValue.Date)
+        {
+            salesPerson.EffectiveEndDate = DateTime.MaxValue;
+        }
+        else
+        {
+            salesPerson.EffectiveEndDate = DateTime.Now;
+        }
+
+        StateHasChanged();
+    }
+
+    private async Task AddSalesPerson()
+    {
+        var salesPerson = new SalesPerson
+        {
+            EffectiveStartDate = DateTime.Now,
+            EffectiveEndDate = DateTime.MaxValue.Date
+        };
+
+        Context.SalesPersons.Add(salesPerson);
+        SalesPersons.Insert(0, salesPerson);
+        await Task.Delay(50);
+        SalesPersonTable.SetSelectedItem(salesPerson);
+        SalesPersonTable.SetEditingItem(salesPerson);
+
+        StateHasChanged();
+    }
+
+    private async Task DeleteSalesPerson(SalesPerson salesPerson)
+    {
+        var result = await Dialog.ShowMessageBox("Warning", "Are you sure you want to delete this entry?", yesText: "Proceed", cancelText: "Cancel") ?? false;
+
+        if (!result)
+        {
+            return;
+        }
+
+        Context.SalesPersons.Remove(salesPerson);
+        SalesPersons.Remove(salesPerson);
+        Context.SaveChanges();
+        StateHasChanged();
     }
 
     #endregion
