@@ -59,6 +59,11 @@ h1:focus {
     margin-bottom: auto;
 }
 
+.flex-vertical-center {
+    margin-left: auto;
+    margin-right: auto;
+}
+
 .flex-right-align {
     margin-left: auto;
     margin-right: 0;

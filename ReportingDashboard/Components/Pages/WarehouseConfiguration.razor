@@ -218,7 +218,7 @@
                 </MudTd>
                 <MudTd>
                     <MudGrid Spacing="1">
-                        @foreach(var designation in context.SalesDesignations.Where(x => x.EffectiveEndDate?.Date == DateTime.MaxValue.Date)) 
+                        @foreach(var designation in context.SalesDesignations.Where(x => x.EffectiveEndDate?.Date == DateTime.MaxValue.Date))
                         {
                             <MudItem xs="12">
                                 <MudPaper Elevation="2">

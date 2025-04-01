@@ -5,9 +5,8 @@ using System.Data;
 
 namespace ReportingDashboard.Data
 {
-    public class SSISContext(IOptions<AppSettings> settingSnapshot) : BaseContext
+    public class SSISContext(IOptionsSnapshot<AppSettings> settingSnapshot) : BaseContext
     {
-        private AppSettings _config = settingSnapshot.Value;
-        public override IDbConnection Connection => new SqlConnection(_config.SSIS);
+        public override IDbConnection Connection => new SqlConnection(settingSnapshot.Value.SSIS);
     }
 }

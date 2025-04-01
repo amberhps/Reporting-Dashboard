@@ -1,6 +1,6 @@
 ﻿@inherits LayoutComponentBase
 
-<MudThemeProvider @bind-IsDarkMode="_isDarkMode" Theme="_theme" />
+<MudThemeProvider @bind-IsDarkMode="IsDarkMode" Theme="Theme" />
 <MudDialogProvider />
 <MudSnackbarProvider />
 <MudPopoverProvider />
@@ -11,22 +11,38 @@
         <MudText Typo="Typo.h6">Reporting Dashboard</MudText>
         <MudChip T="string" Color="Color.Secondary" Size="Size.Small" Class="ms-2">@_version</MudChip>
         <MudSpacer />
-        <MudToggleIconButton @bind-Toggled="_isDarkMode" Icon="@Icons.Material.Rounded.DarkMode" ToggledIcon="@Icons.Material.Rounded.WbSunny" />
+        @if (UserImage != null)
+        {
+            <MudAvatar>
+                <MudImage Src="@($"data:image/svg;base64, {UserImage}")" />
+            </MudAvatar>
+        } 
+        else 
+        {
+            <AuthorizeView>
+                <MudAvatar>@context.User.Identity?.Name?.Split("\\")[1].ToUpper()[0]</MudAvatar>
+            </AuthorizeView>
+        }
+        @*<MudToggleIconButton @bind-Toggled="IsDarkMode" Icon="@Icons.Material.Rounded.DarkMode" ToggledIcon="@Icons.Material.Rounded.WbSunny" />*@
     </MudAppBar>
-    <MudDrawer @bind-Open="_drawerOpen" ClipMode="DrawerClipMode.Always" Elevation="4" Variant="DrawerVariant.Mini">
+    <MudDrawer @bind-Open="IsDrawerOpen" ClipMode="DrawerClipMode.Always" Elevation="4" Variant="DrawerVariant.Mini">
         <MudNavMenu Class="nav-menu">
-            <MudNavGroup Title="Warehouse" Icon="@Icons.Material.Rounded.House" HideExpandIcon="@(!_drawerOpen)" Expanded="true">
+            <MudNavGroup Title="Warehouse" Icon="@Icons.Material.Rounded.House" HideExpandIcon="@(!IsDrawerOpen)">
                 <MudNavLink Href="/warehouse-dashboard" Icon="@Icons.Material.Rounded.DashboardCustomize" IconColor="Color.Primary">Dashboard</MudNavLink>
                 <MudNavLink Href="/warehouse-configuration" Icon="@Icons.Material.Rounded.Construction" IconColor="Color.Primary">Configuration</MudNavLink>
             </MudNavGroup>
+            <MudNavGroup Title="Pharma API" Icon="@Icons.Material.Rounded.Api" HideExpandIcon="@(!IsDrawerOpen)">
+                <MudNavLink Href="/pharma-api-dashboard" Icon="@Icons.Material.Rounded.DashboardCustomize" IconColor="Color.Primary">Dashboard</MudNavLink>
+                <MudNavLink Href="/pharma-api-configuration" Icon="@Icons.Material.Rounded.Construction" IconColor="Color.Primary">Configuration</MudNavLink>
+            </MudNavGroup>
             <MudNavLink Href="/jobs" Icon="@Icons.Material.Rounded.AccessTime" IconColor="Color.Primary">Jobs</MudNavLink>
-            <MudNavLink Icon="@Icons.Material.Filled.Settings" IconColor="Color.Primary" Class="bottom-align" OnClick="ShowSettingsDialog">Settings</MudNavLink>
+            <MudNavLink Icon="@Icons.Material.Rounded.Settings" IconColor="Color.Primary" Class="bottom-align" OnClick="ShowSettingsDialog">Settings</MudNavLink>
         </MudNavMenu>
     </MudDrawer>
     <MudMainContent>
-        <div>
+        <CascadingValue Value="Palette">
             @Body
-        </div>
+        </CascadingValue>
     </MudMainContent>
 </MudLayout>
 
@@ -40,30 +56,64 @@
     [Inject]
     public required IDialogService Dialog { get; set; }
 
-    private bool _drawerOpen = false;
-    private bool _isDarkMode = true;
+    [Inject]
+    public required MudTheme Theme { get; set; }
+
+    [CascadingParameter]
+    public required Task<AuthenticationState> Auth { get; set; }
+
+    public Palette Palette => IsDarkMode ? Theme.PaletteDark : Theme.PaletteLight;
+
+    private bool IsDrawerOpen = true;
+    private bool IsDarkMode = true;
 
     private string? _version = Assembly.GetEntryAssembly()
     ?.GetCustomAttributes<AssemblyInformationalVersionAttribute>()
     ?.Select(x => x.InformationalVersion).First()
     .Split("+")[0];
 
-    private MudTheme _theme = new MudTheme()
+    private void ToggleDrawer() => IsDrawerOpen = !IsDrawerOpen;
+
+    private string? UserImage;
+
+    protected override async Task OnInitializedAsync()
     {
-        PaletteDark = new PaletteDark()
+        try 
         {
-            Primary = Colors.Blue.Darken4,
-            Secondary = Colors.Orange.Lighten1
-        },
+            var auth = await Auth;
+            if (auth.User?.Identity?.IsAuthenticated ?? false) 
+            {
+                if (auth.User?.Identity?.Name == null)
+                {
+                    return;
+                }
 
-        PaletteLight = new PaletteLight()
-        {
-            Primary = Colors.Blue.Darken4,
-            Secondary = Colors.Orange.Lighten1
+                using var dEntry = new DirectoryEntry("adsdatasource")
+                {
+                    Path = "LDAP://amberpharmacy.com",
+                    AuthenticationType = AuthenticationTypes.Secure
+                };
+
+                using var dSearcher = new DirectorySearcher(dEntry) 
+                { 
+                    Filter = $"(&(objectClass=person)(sAMAccountName={auth.User.Identity.Name.Split("\\")[1]}))"
+                };
+
+                using var user = new DirectoryEntry(dSearcher.FindOne()?.Path);
+                var image = user.Properties["thumbnailPhoto"].Value as byte[];
+
+                if (image != null)
+                {
+                    UserImage = Convert.ToBase64String(image);
+                }
+            }
         }
-    };
-
-    private void ToggleDrawer() => _drawerOpen = !_drawerOpen;
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+        }
+        await base.OnInitializedAsync();
+    }
 
     private Task ShowSettingsDialog() 
     {
