@@ -1,91 +1,89 @@
 ﻿@page "/pharma-api-configuration"
 
 @using System.Text.Json
-<div class="mx-2 my-1">
-    <MudExpansionPanels>
-        <MudExpansionPanel Text="Referral Assessment Groups" ExpandedChanged="x => RevertAssessmentGroup(x)">
-            <MudStack Row Class="mb-3">
-                @if (Loading)
-                {
-                    <MudProgressCircular Size="Size.Small" Color="Color.Primary" Indeterminate="true" />
-                }
-                <MudSelect T="AssessmentGroup" Placeholder="Select Assessment Group" Class="mb-2 me-2" @bind-Value="SelectedAssessmentGroup">
-                    @foreach (var group in AssessmentGroups)
-                    {
-                        <MudSelectItem T="AssessmentGroup" Value="@group">@group.TriageName</MudSelectItem>
-                    }
-                </MudSelect>
-                <MudIconButton Icon="@Icons.Material.Filled.Add" OnClick="AddAssessmentGroup" />
-                <MudIconButton Icon="@Icons.Material.Filled.Save" OnClick="SaveAssessmentGroup" />
-                <MudIconButton Icon="@Icons.Material.Filled.Cancel" OnClick="() => RevertAssessmentGroup(false)" />
-            </MudStack>
-            @if (SelectedAssessmentGroup != null)
+<MudExpansionPanels>
+    <MudExpansionPanel Text="Referral Assessment Groups" ExpandedChanged="x => RevertAssessmentGroup(x)">
+        <MudStack Row Class="mb-3">
+            @if (Loading)
             {
-                foreach (var question in SelectedAssessmentGroup.AssessmentGroupQuestions)
-                {
-                    <MudPaper Class="pa-2 mb-4" Elevation="2" Style="@($"background: {Palette.Background}")">
-                        <MudGrid Spacing="3">
-                            <MudItem xs="8" >
-                                <MudTextField T="string" Label="Column Name" @bind-Value="question.ColumnName" Variant="Variant.Outlined" AdornmentIcon="@Icons.Material.Filled.Help" Adornment="Adornment.End" OnAdornmentClick="ColumnNameAdornmentClick" />
-                            </MudItem>
-                            <MudItem xs="2">
-                                <MudSelect T="string" @bind-Value="question.ColumnSource" Variant="Variant.Outlined" Label="Column Source">
-                                    @foreach (string columnSource in ColumnSources)
-                                    {
-                                        <MudSelectItem T="string" Value="columnSource">@columnSource</MudSelectItem>
-                                    }
-                                </MudSelect>
-                            </MudItem>
-                            <MudItem xs="2" Class="mt-4">
-                                <MudSwitch T="bool" Label="Constant Value?" Class="bottom-align" @bind-Value="question.IsConstant" Color="Color.Primary" />
-                            </MudItem>
-                            <MudItem xs="6">
-                                <MudTextField T="string" Label="Assessment Name" @bind-Value="question.AssessmentName" Variant="Variant.Outlined" />
-                            </MudItem>
-                            <MudItem xs="6">
-                                <MudTextField T="string" Label="Assessment Question Name" @bind-Value="question.AssessmentQuestionName" Variant="Variant.Outlined" />
-                            </MudItem>
-                            <MudItem xs="3">
-                                <MudTextField T="string" Label="True Mapping" @bind-Value="question.TrueMapping" Variant="Variant.Outlined" />
-                            </MudItem>
-                            <MudItem xs="3">
-                                <MudTextField T="string" Label="False Mapping" @bind-Value="question.FalseMapping" Variant="Variant.Outlined" />
-                            </MudItem>
-                            <MudItem xs="3">
-                                <MudTextField T="string" Label="Date Time Format" @bind-Value="question.DateTimeFormat" Variant="Variant.Outlined" />
-                            </MudItem>
-                            <MudItem xs="3">
-                                <MudTextField T="string" Label="Delimiter" @bind-Value="question.Delimiter" Variant="Variant.Outlined" />
-                            </MudItem>
-                        </MudGrid>
-                    </MudPaper>
-                }
-                <MudIconButton Icon="@Icons.Material.Filled.Add" OnClick="AddAssessmentGroupQuestion" Class="mt-n3" />
+                <MudProgressCircular Size="Size.Small" Color="Color.Primary" Indeterminate="true" />
             }
-        </MudExpansionPanel>
-        <MudExpansionPanel Text="Configurations" ExpandedChanged="x => RevertConfig(x)">
-            <MudStack Row>
-                @if (Loading)
+            <MudSelect T="AssessmentGroup" Placeholder="Select Assessment Group" Class="mb-2 me-2" @bind-Value="SelectedAssessmentGroup">
+                @foreach (var group in AssessmentGroups)
                 {
-                    <MudProgressCircular Size="Size.Small" Color="Color.Primary" Indeterminate="true" />
+                    <MudSelectItem T="AssessmentGroup" Value="@group">@group.TriageName</MudSelectItem>
                 }
-                <MudSelect T="Data.Models.PharmaAPI.PharmaAPIConfiguration" @bind-Value="SelectedConfig" Placeholder="Select Configuration" Class="mb-2 me-2">
-                    @foreach (var config in Configs)
-                    {
-                        <MudSelectItem T="Data.Models.PharmaAPI.PharmaAPIConfiguration" Value="@config">@config.Name</MudSelectItem>
-                    }
-                </MudSelect>
-                <MudIconButton Icon="@Icons.Material.Filled.Add" OnClick="AddConfig" />
-                <MudIconButton Icon="@Icons.Material.Filled.Save" OnClick="SaveConfig" />
-                <MudIconButton Icon="@Icons.Material.Filled.Cancel" OnClick="() => RevertConfig(false)" />
-            </MudStack>
-            @if (SelectedConfig != null)
+            </MudSelect>
+            <MudIconButton Icon="@Icons.Material.Filled.Add" OnClick="AddAssessmentGroup" />
+            <MudIconButton Icon="@Icons.Material.Filled.Save" OnClick="SaveAssessmentGroup" />
+            <MudIconButton Icon="@Icons.Material.Filled.Cancel" OnClick="() => RevertAssessmentGroup(false)" />
+        </MudStack>
+        @if (SelectedAssessmentGroup != null)
+        {
+            foreach (var question in SelectedAssessmentGroup.AssessmentGroupQuestions)
             {
-                <MudTextField T="string" @bind-Value="SelectedConfig.JsonConfig" Label="Configuration Items" Variant="Variant.Outlined" AutoGrow AutoFocus Class="mb-2" />
+                <MudPaper Class="pa-2 mb-4" Elevation="2" Style="@($"background: {Palette.Background}")">
+                    <MudGrid Spacing="3">
+                        <MudItem xs="8" >
+                            <MudTextField T="string" Label="Column Name" @bind-Value="question.ColumnName" Variant="Variant.Outlined" AdornmentIcon="@Icons.Material.Filled.Help" Adornment="Adornment.End" OnAdornmentClick="ColumnNameAdornmentClick" />
+                        </MudItem>
+                        <MudItem xs="2">
+                            <MudSelect T="string" @bind-Value="question.ColumnSource" Variant="Variant.Outlined" Label="Column Source">
+                                @foreach (string columnSource in ColumnSources)
+                                {
+                                    <MudSelectItem T="string" Value="columnSource">@columnSource</MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudItem>
+                        <MudItem xs="2" Class="mt-4">
+                            <MudSwitch T="bool" Label="Constant Value?" Class="bottom-align" @bind-Value="question.IsConstant" Color="Color.Primary" />
+                        </MudItem>
+                        <MudItem xs="6">
+                            <MudTextField T="string" Label="Assessment Name" @bind-Value="question.AssessmentName" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="6">
+                            <MudTextField T="string" Label="Assessment Question Name" @bind-Value="question.AssessmentQuestionName" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="3">
+                            <MudTextField T="string" Label="True Mapping" @bind-Value="question.TrueMapping" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="3">
+                            <MudTextField T="string" Label="False Mapping" @bind-Value="question.FalseMapping" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="3">
+                            <MudTextField T="string" Label="Date Time Format" @bind-Value="question.DateTimeFormat" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="3">
+                            <MudTextField T="string" Label="Delimiter" @bind-Value="question.Delimiter" Variant="Variant.Outlined" />
+                        </MudItem>
+                    </MudGrid>
+                </MudPaper>
             }
-        </MudExpansionPanel>
-    </MudExpansionPanels>
-</div>
+            <MudIconButton Icon="@Icons.Material.Filled.Add" OnClick="AddAssessmentGroupQuestion" Class="mt-n3" />
+        }
+    </MudExpansionPanel>
+    <MudExpansionPanel Text="Configurations" ExpandedChanged="x => RevertConfig(x)">
+        <MudStack Row>
+            @if (Loading)
+            {
+                <MudProgressCircular Size="Size.Small" Color="Color.Primary" Indeterminate="true" />
+            }
+            <MudSelect T="Data.Models.PharmaAPI.PharmaAPIConfiguration" @bind-Value="SelectedConfig" Placeholder="Select Configuration" Class="mb-2 me-2">
+                @foreach (var config in Configs)
+                {
+                    <MudSelectItem T="Data.Models.PharmaAPI.PharmaAPIConfiguration" Value="@config">@config.Name</MudSelectItem>
+                }
+            </MudSelect>
+            <MudIconButton Icon="@Icons.Material.Filled.Add" OnClick="AddConfig" />
+            <MudIconButton Icon="@Icons.Material.Filled.Save" OnClick="SaveConfig" />
+            <MudIconButton Icon="@Icons.Material.Filled.Cancel" OnClick="() => RevertConfig(false)" />
+        </MudStack>
+        @if (SelectedConfig != null)
+        {
+            <MudTextField T="string" @bind-Value="SelectedConfig.JsonConfig" Label="Configuration Items" Variant="Variant.Outlined" AutoGrow AutoFocus Class="mb-2" />
+        }
+    </MudExpansionPanel>
+</MudExpansionPanels>
 
 @code {
     [Inject]

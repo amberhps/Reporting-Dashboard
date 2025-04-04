@@ -1,0 +1,27 @@
+﻿<MudCard>
+    <MudCardHeader>
+        <MudText Typo="Typo.h6" Class="mb-0">@MudDialog.Title</MudText>
+    </MudCardHeader>
+    <MudCardContent>
+        <MudGrid Spacing="0">
+            <MudItem xs="6">
+                <MudText Typo="Typo.subtitle2">Theme:</MudText>
+            </MudItem>
+            <MudItem xs="6">
+                <MudToggleIconButton @bind-Toggled="IsDarkMode" Icon="@Icons.Material.Rounded.DarkMode" ToggledIcon="@Icons.Material.Rounded.WbSunny" />
+            </MudItem>
+        </MudGrid>
+    </MudCardContent>
+    <MudCardActions>
+        <MudButton OnClick="() => MudDialog.Cancel()" Variant="Variant.Filled" Class="me-2">Cancel</MudButton>
+        <MudButton OnClick="() => MudDialog.Close(IsDarkMode)" Color="Color.Primary" Variant="Variant.Filled">Save</MudButton>
+    </MudCardActions>
+</MudCard>
+
+@code {
+    [CascadingParameter]
+    public required IMudDialogInstance MudDialog { get; set; }
+
+    [Parameter]
+    public bool IsDarkMode { get; set; }
+}

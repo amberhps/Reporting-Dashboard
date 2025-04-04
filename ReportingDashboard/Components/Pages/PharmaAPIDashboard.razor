@@ -2,49 +2,47 @@
 
 @using Microsoft.Extensions.Options
 
-<div class="mx-2 my-1">
-    <MudExpansionPanels>
-        <MudExpansionPanel ExpandedChanged="(x) => PharmaAPIExpanded = x">
-            <TitleContent>
-                <MudStack Row>
-                    <MudText>Pharma API</MudText>
-                    <MudIcon Icon="@PharmaIcon" Color="@PharmaIconColor" Title="@PharmaIconTitle" />
-                </MudStack>
-            </TitleContent>
-            <ChildContent>
-                <MudButton Variant="Variant.Filled" Color="@MaintenanceButtonColor" OnClick="MaintenanceModeClick">Toggle Maintenance Mode</MudButton>
-            </ChildContent>
-        </MudExpansionPanel>
-        <MudExpansionPanel ExpandedChanged="(x) => JobPanelExpanded = x">
-            <TitleContent>
-                <MudStack Row>
-                    <MudText>Pharma API Background Jobs</MudText>
-                    <MudIcon Icon="@JobIcon" Color="@JobIconColor" Title="@JobIconTitle" />
-                </MudStack>
-            </TitleContent>
-            <ChildContent>
-                <MudStack>
-                    @foreach (var job in BGHeartbeat?.JobInfo ?? [])
-                    {
-                        <MudPaper Class="pa-3" Elevation="4">
-                            <MudGrid>
-                                <MudItem xs="3">
-                                    <MudText Typo="Typo.subtitle2">@job.Name</MudText>
-                                </MudItem>
-                                <MudItem xs="9">
-                                    <MudStack Row Justify="Justify.FlexEnd">
-                                        <MudText Typo="Typo.subtitle2">@($"Next Run: {job.NextRunDate}")</MudText>
-                                    </MudStack>
-                                </MudItem>
-                            </MudGrid>
-                            <MudProgressLinear Min="0" Max="100" Value="@job.Progress" Color="@(job.Enabled ? Color.Success : Color.Error)" Rounded />
-                        </MudPaper>
-                    }
-                </MudStack>
-            </ChildContent>
-        </MudExpansionPanel>
-    </MudExpansionPanels>
-</div>
+<MudExpansionPanels>
+    <MudExpansionPanel ExpandedChanged="(x) => PharmaAPIExpanded = x">
+        <TitleContent>
+            <MudStack Row>
+                <MudText>Pharma API</MudText>
+                <MudIcon Icon="@PharmaIcon" Color="@PharmaIconColor" Title="@PharmaIconTitle" />
+            </MudStack>
+        </TitleContent>
+        <ChildContent>
+            <MudButton Variant="Variant.Filled" Color="@MaintenanceButtonColor" OnClick="MaintenanceModeClick">Toggle Maintenance Mode</MudButton>
+        </ChildContent>
+    </MudExpansionPanel>
+    <MudExpansionPanel ExpandedChanged="(x) => JobPanelExpanded = x">
+        <TitleContent>
+            <MudStack Row>
+                <MudText>Pharma API Background Jobs</MudText>
+                <MudIcon Icon="@JobIcon" Color="@JobIconColor" Title="@JobIconTitle" />
+            </MudStack>
+        </TitleContent>
+        <ChildContent>
+            <MudStack>
+                @foreach (var job in BGHeartbeat?.JobInfo ?? [])
+                {
+                    <MudPaper Class="pa-3" Elevation="4">
+                        <MudGrid>
+                            <MudItem xs="3">
+                                <MudText Typo="Typo.subtitle2">@job.Name</MudText>
+                            </MudItem>
+                            <MudItem xs="9">
+                                <MudStack Row Justify="Justify.FlexEnd">
+                                    <MudText Typo="Typo.subtitle2">@($"Next Run: {job.NextRunDate}")</MudText>
+                                </MudStack>
+                            </MudItem>
+                        </MudGrid>
+                        <MudProgressLinear Min="0" Max="100" Value="@job.Progress" Color="@(job.Enabled ? Color.Success : Color.Error)" Rounded />
+                    </MudPaper>
+                }
+            </MudStack>
+        </ChildContent>
+    </MudExpansionPanel>
+</MudExpansionPanels>
 
 @code {
     [Inject]

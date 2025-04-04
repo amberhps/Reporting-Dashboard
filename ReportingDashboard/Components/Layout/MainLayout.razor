@@ -23,7 +23,6 @@
                 <MudAvatar>@context.User.Identity?.Name?.Split("\\")[1].ToUpper()[0]</MudAvatar>
             </AuthorizeView>
         }
-        @*<MudToggleIconButton @bind-Toggled="IsDarkMode" Icon="@Icons.Material.Rounded.DarkMode" ToggledIcon="@Icons.Material.Rounded.WbSunny" />*@
     </MudAppBar>
     <MudDrawer @bind-Open="IsDrawerOpen" ClipMode="DrawerClipMode.Always" Elevation="4" Variant="DrawerVariant.Mini">
         <MudNavMenu Class="nav-menu">
@@ -35,13 +34,15 @@
                 <MudNavLink Href="/pharma-api-dashboard" Icon="@Icons.Material.Rounded.DashboardCustomize" IconColor="Color.Primary">Dashboard</MudNavLink>
                 <MudNavLink Href="/pharma-api-configuration" Icon="@Icons.Material.Rounded.Construction" IconColor="Color.Primary">Configuration</MudNavLink>
             </MudNavGroup>
-            <MudNavLink Href="/jobs" Icon="@Icons.Material.Rounded.AccessTime" IconColor="Color.Primary">Jobs</MudNavLink>
+            <MudNavLink Href="/jobs" Icon="@Icons.Material.Rounded.AccessTime">Jobs</MudNavLink>
             <MudNavLink Icon="@Icons.Material.Rounded.Settings" IconColor="Color.Primary" Class="bottom-align" OnClick="ShowSettingsDialog">Settings</MudNavLink>
         </MudNavMenu>
     </MudDrawer>
     <MudMainContent>
         <CascadingValue Value="Palette">
-            @Body
+            <div class="mx-2 my-1">
+                @Body
+            </div>
         </CascadingValue>
     </MudMainContent>
 </MudLayout>
@@ -112,14 +113,34 @@
         {
             Console.WriteLine(ex.Message);
         }
+
         await base.OnInitializedAsync();
     }
 
-    private Task ShowSettingsDialog() 
+    private async Task ShowSettingsDialog() 
     {
-        return Dialog.ShowAsync<MudDialog>("Settings", new DialogOptions() 
-        { 
-            Position = DialogPosition.TopCenter
-        });
+        var settings = await Dialog.ShowAsync<SettingsModal>("Settings",
+            new DialogParameters() 
+            { 
+                { "IsDarkMode", IsDarkMode }
+            },
+            new DialogOptions() 
+            { 
+                Position = DialogPosition.TopCenter,
+                NoHeader = true
+            }
+        );
+
+        var result = await settings.Result;
+
+        if (result == null) 
+        {
+            return;
+        }
+
+        if (!result.Canceled && result.Data is bool darkMode)
+        {
+            IsDarkMode = darkMode;
+        }
     }
 }

@@ -5,6 +5,7 @@ using ReportingDashboard.Data;
 using Microsoft.Extensions.Options;
 using MudBlazor;
 using Microsoft.AspNetCore.Authentication.Negotiate;
+using Microsoft.AspNetCore.Authorization;
 
 namespace ReportingDashboard
 {
@@ -23,14 +24,7 @@ namespace ReportingDashboard
             builder.Services.AddAuthentication(NegotiateDefaults.AuthenticationScheme)
                 .AddNegotiate();
 
-            builder.Services.AddAuthorization(options =>
-            {
-                options.AddPolicy("AmberPolicy", policy =>
-                {
-                    policy.RequireRole("SG-AdminPortalAdmin");
-                });
-                options.FallbackPolicy = options.DefaultPolicy;
-            });
+            builder.Services.AddAuthorization(ConfigureRoles);
 
             builder.Services.Configure<AppSettings>(builder.Configuration.GetSection("ConnectionStrings"));
             builder.Services.AddScoped<WarehouseContext>();
@@ -75,6 +69,36 @@ namespace ReportingDashboard
                 .AddInteractiveServerRenderMode();
 
             app.Run();
+        }
+
+        private static void ConfigureRoles(AuthorizationOptions options)
+        {
+            options.AddPolicy("General", policy =>
+            {
+                policy.RequireRole("SG-AdminPortalAdmin");
+            });
+
+            options.AddPolicy("Admin", policy =>
+            {
+                policy.RequireRole("RDB-Admin");
+            });
+
+            options.AddPolicy("Warehouse", policy =>
+            {
+                policy.RequireRole("RDB-Admin", "RDB-Warehouse");
+            });
+
+            options.AddPolicy("PharmaAPI", policy =>
+            {
+                policy.RequireRole("RDB-Admin", "RDB-PharmaAPI");
+            });
+
+            options.AddPolicy("Jobs", policy =>
+            {
+                policy.RequireRole("RDB-Admin", "RDB-Jobs");
+            });
+
+            options.FallbackPolicy = options.DefaultPolicy;
         }
     }
 }
