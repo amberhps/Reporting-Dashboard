@@ -8,6 +8,19 @@ namespace ReportingDashboard.Data
 {
     public class WarehouseContext(IOptionsSnapshot<AppSettings> settingSnapshot) : BaseContext
     {
-        public override IDbConnection Connection => _connection ??= new SqlConnection(settingSnapshot.Value.Warehouse);
+        public override IDbConnection Connection 
+        {
+            get 
+            {
+                _connection ??= new SqlConnection(settingSnapshot.Value.Warehouse);
+
+                if (_connection.State != ConnectionState.Open)
+                {
+                    _connection.Open();
+                }
+
+                return _connection;
+            }
+        }
     }
 }
