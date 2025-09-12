@@ -9,7 +9,7 @@
                 {
                     <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" />
                 }
-                else if (WarehouseLoad.LoadStatus == "Failure")
+                else if (WarehouseLoad.LoadStatus == "Failed")
                 {
                     <MudIcon Icon="@Icons.Material.Filled.Error" Color="Color.Error"/>
                 }
@@ -50,7 +50,7 @@
                         } 
                         else 
                         {
-                            <MudProgressCircular Size="Size.Small" Color="Color.Primary" Indeterminate="true"/>
+                            <MudProgressCircular Size="Size.Small" Color="Color.Primary" Indeterminate/>
                         }
                     </MudTd>
                 </RowTemplate>
