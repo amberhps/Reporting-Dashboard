@@ -1,4 +1,5 @@
-﻿<MudTable 
+﻿@using ReportingDashboard.Data.Models.Warehouse
+<MudTable 
 Items="SalesPerson.SalesDesignations.OrderByDescending(x => x.EffectiveEndDate)"
 GroupBy="DesignationsGroups"
 CanCancelEdit

@@ -1,4 +1,4 @@
-﻿namespace ReportingDashboard.Data.Models
+﻿namespace ReportingDashboard.Data.Models.Warehouse
 {
     public class MostRecentWarehouseLoad
     {

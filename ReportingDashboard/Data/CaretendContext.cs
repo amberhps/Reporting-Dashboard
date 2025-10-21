@@ -3,6 +3,7 @@ using Microsoft.Extensions.Options;
 using ReportingDashboard.Data.Models;
 using ReportingDashboard.Data.Models.Caretend;
 using ReportingDashboard.Data.Models.PharmaAPI;
+using ReportingDashboard.Data.Models.Warehouse;
 
 namespace ReportingDashboard.Data
 {

@@ -1,7 +1,7 @@
 ﻿using Microsoft.Identity.Client;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace ReportingDashboard.Data.Models
+namespace ReportingDashboard.Data.Models.Warehouse
 {
     public class SalesDesignation
     {

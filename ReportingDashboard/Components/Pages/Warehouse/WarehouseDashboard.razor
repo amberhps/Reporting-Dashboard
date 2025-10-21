@@ -1,4 +1,5 @@
 ﻿@page "/warehouse-dashboard"
+@using ReportingDashboard.Data.Models.Warehouse
 
 @if(WarehouseLoad is not null) 
 {
@@ -15,7 +16,7 @@
                 }
                 else
                 {
-                    <MudProgressCircular Size="Size.Small" Color="Color.Primary" Indeterminate="true" />
+                    <MudProgressCircular Size="Size.Small" Color="Color.Primary" Indeterminate />
                 }
                 <MudText Typo="Typo.h6" Class="ms-2">Most Recent Load</MudText>
                 <MudText Typo="Typo.subtitle2" Class="ms-2">@WarehouseLoad.EndDate?.ToLocalTime().ToString("M/d/yyyy h:mm tt")</MudText>
@@ -58,18 +59,7 @@
         </ChildContent>
     </MudExpansionPanel>
 
-    <style>
-        .stacked-chart .mud-charts-xaxis text 
-        {
-        writing-mode: vertical-lr;
-        transform: translateY(25px);
-        }
-        .mud-chart-line 
-        {
-        overflow: visible;
-        }
-    </style>
-    <MudExpansionPanel Expanded="true">
+    <MudExpansionPanel Expanded>
         <TitleContent>
             <div class="flex-row">
                 <MudIcon Icon="@Icons.Material.Filled.Timeline" Color="Color.Success" />
@@ -86,7 +76,9 @@
                             <MudSpacer />
                         </MudCardHeader>
                         <MudCardContent>
-                            <MudTimeSeriesChart ChartSeries="@RecentLoadTimeSpan" LegendPosition="Position.Left" TimeLabelSpacing="TimeSpan.FromMinutes(1)" Class="pb-4" />
+                            <MudTimeSeriesChart 
+                                ChartSeries="@RecentLoadTimeSpan"
+                                LegendPosition="Position.Bottom" />
                         </MudCardContent>
                     </MudCard>
                 </MudItem>
@@ -98,7 +90,12 @@
                             <MudSpacer />
                         </MudCardHeader>
                         <MudCardContent>
-                            <MudChart ChartType="ChartType.StackedBar" ChartSeries="@RecentLoadTimes" XAxisLabels="@RecentLoadTimesLabels" LegendPosition="Position.Left" Title="Recent Loads"/>
+                            <MudChart 
+                                ChartType="ChartType.StackedBar" 
+                                ChartSeries="@RecentLoadTimes" 
+                                XAxisLabels="@RecentLoadTimesLabels"
+                                LegendPosition="Position.Bottom"
+                                Title="Recent Loads" />
                         </MudCardContent>
                     </MudCard>
                 </MudItem>
@@ -141,6 +138,10 @@
     //Stacked line chart data
     public List<ChartSeries> RecentLoadTimes { get; set; } = [];
     public string[] RecentLoadTimesLabels { get; set; } = [];
+    public ChartOptions RecentLoadTimesOptions { get; set; } = new ChartOptions()
+    {
+        XAxisLines = false
+    };
 
     //Time series data
     public List<TimeSeriesChartSeries> RecentLoadTimeSpan { get; set; } = [];
@@ -178,7 +179,7 @@
     private void StartTimer() 
     {
         _refreshTimer.Start();
-        SnackBar.Add("Refresh Started", configure: (x) => 
+        SnackBar.Add("Refresh Started", configure: x => 
         {
             x.Icon = Icons.Material.Outlined.Check;
             x.VisibleStateDuration = 2000;
@@ -264,11 +265,11 @@ FROM
             output.Add(new ChartSeries()
             {
                 Name = table,
-                    Data = tableData
+                Data = tableData
             });
         }
 
-        var axisLabels = loads.Select(x => $"{x.Key.StartDate.ToLocalTime().ToString("M/d h:mm tt")}").ToArray();
+        var axisLabels = loads.Select(x => $"{x.Key.StartDate.ToLocalTime().ToString("M/d")}").ToArray();
 
         return (output, axisLabels);
     }
@@ -288,6 +289,8 @@ FROM
         foreach (var tableLoad in WarehouseLoad.Tables) 
         {
             var dates = new List<DateTime?>() { tableLoad.StartDate, tableLoad.EndDate };
+            var shortName = tableLoad.TableName.Length > 20 ? tableLoad.TableName.Substring(0, 20) + "..." : tableLoad.TableName;
+
             output.Add(new TimeSeriesChartSeries() 
             {
                 Index = index,
