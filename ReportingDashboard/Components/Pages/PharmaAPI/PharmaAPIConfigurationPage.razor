@@ -1,0 +1,321 @@
+﻿@page "/pharma-api-configuration"
+
+@using System.Text.Json
+@using ReportingDashboard.Data.PharmaAPI.Models
+@using ReportingDashboard.Data.Warehouse
+
+<MudExpansionPanels>
+    <MudExpansionPanel Text="Referral Assessment Groups" ExpandedChanged="x => RevertAssessmentGroup(x)">
+        <MudStack Row Class="mb-3">
+            @if (Loading)
+            {
+                <MudProgressCircular Size="Size.Small" Color="Color.Primary" Indeterminate="true" />
+            }
+            <MudSelect T="AssessmentGroup" Placeholder="Select Assessment Group" Class="mb-2 me-2" @bind-Value="SelectedAssessmentGroup">
+                @foreach (var group in AssessmentGroups)
+                {
+                    <MudSelectItem T="AssessmentGroup" Value="@group">@group.TriageName</MudSelectItem>
+                }
+            </MudSelect>
+            <MudIconButton Icon="@Icons.Material.Filled.Add" OnClick="AddAssessmentGroup" />
+            <MudIconButton Icon="@Icons.Material.Filled.Save" OnClick="SaveAssessmentGroup" />
+            <MudIconButton Icon="@Icons.Material.Filled.Cancel" OnClick="() => RevertAssessmentGroup(false)" />
+        </MudStack>
+        @if (SelectedAssessmentGroup != null)
+        {
+            foreach (var question in SelectedAssessmentGroup.AssessmentGroupQuestions)
+            {
+                <MudPaper Class="pa-2 mb-4" Elevation="2" Style="@($"background: {Palette.Background}")">
+                    <MudGrid Spacing="3">
+                        <MudItem xs="8" >
+                            <MudTextField T="string" Label="Column Name" @bind-Value="question.ColumnName" Variant="Variant.Outlined" AdornmentIcon="@Icons.Material.Filled.Help" Adornment="Adornment.End" OnAdornmentClick="ColumnNameAdornmentClick" />
+                        </MudItem>
+                        <MudItem xs="2">
+                            <MudSelect T="string" @bind-Value="question.ColumnSource" Variant="Variant.Outlined" Label="Column Source">
+                                @foreach (string columnSource in ColumnSources)
+                                {
+                                    <MudSelectItem T="string" Value="columnSource">@columnSource</MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudItem>
+                        <MudItem xs="2" Class="mt-4">
+                            <MudSwitch T="bool" Label="Constant Value?" Class="bottom-align" @bind-Value="question.IsConstant" Color="Color.Primary" />
+                        </MudItem>
+                        <MudItem xs="6">
+                            <MudTextField T="string" Label="Assessment Name" @bind-Value="question.AssessmentName" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="6">
+                            <MudTextField T="string" Label="Assessment Question Name" @bind-Value="question.AssessmentQuestionName" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="3">
+                            <MudTextField T="string" Label="True Mapping" @bind-Value="question.TrueMapping" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="3">
+                            <MudTextField T="string" Label="False Mapping" @bind-Value="question.FalseMapping" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="3">
+                            <MudTextField T="string" Label="Date Time Format" @bind-Value="question.DateTimeFormat" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="3">
+                            <MudTextField T="string" Label="Delimiter" @bind-Value="question.Delimiter" Variant="Variant.Outlined" />
+                        </MudItem>
+                    </MudGrid>
+                </MudPaper>
+            }
+            <MudIconButton Icon="@Icons.Material.Filled.Add" OnClick="AddAssessmentGroupQuestion" Class="mt-n3" />
+        }
+    </MudExpansionPanel>
+    <MudExpansionPanel Text="Configurations" ExpandedChanged="x => RevertConfig(x)">
+        <MudStack Row>
+            @if (Loading)
+            {
+                <MudProgressCircular Size="Size.Small" Color="Color.Primary" Indeterminate="true" />
+            }
+            <MudSelect T="PharmaAPIConfiguration" @bind-Value="SelectedConfig" Placeholder="Select Configuration" Class="mb-2 me-2">
+                @foreach (var config in Configs)
+                {
+                    <MudSelectItem T="PharmaAPIConfiguration" Value="@config">@config.Name</MudSelectItem>
+                }
+            </MudSelect>
+            <MudIconButton Icon="@Icons.Material.Filled.Add" OnClick="AddConfig" />
+            <MudIconButton Icon="@Icons.Material.Filled.Save" OnClick="SaveConfig" />
+            <MudIconButton Icon="@Icons.Material.Filled.Cancel" OnClick="() => RevertConfig(false)" />
+        </MudStack>
+        @if (SelectedConfig != null)
+        {
+            <MudTextField T="string" @bind-Value="SelectedConfig.JsonConfig" Label="Configuration Items" Variant="Variant.Outlined" AutoGrow AutoFocus Class="mb-2" />
+        }
+    </MudExpansionPanel>
+</MudExpansionPanels>
+
+@code {
+    [Inject]
+    public required IDbContextFactory<WarehouseConfigContext> ContextFactory { get; set; }
+
+    [Inject]
+    public required IDialogService Dialog { get; set; }
+
+    [Inject]
+    public required ISnackbar SnackBar { get; set; }
+
+    [Inject]
+    public required MudTheme Theme { get; set; }
+
+    [CascadingParameter]
+    public required Palette Palette { get; set; }
+
+    public required WarehouseConfigContext Context { get; set; }
+
+    private List<PharmaAPIConfiguration> Configs = [];
+    private PharmaAPIConfiguration? SelectedConfig;
+
+    private List<AssessmentGroup> AssessmentGroups = [];
+    private AssessmentGroup? SelectedAssessmentGroup;
+
+    private bool Loading = true;
+
+    private List<string> ColumnSources = ["", "Patient Referral", "Original Referral"];
+
+    protected override async Task OnInitializedAsync()
+    {
+        Context = await ContextFactory.CreateDbContextAsync();
+        Configs = await Task.Run(() => Context.PharmaAPIConfiguration.Where(x => x.RecStatus == 1).ToList());
+        AssessmentGroups = await Task.Run(() => Context.AssessmentGroups.Include(x => x.AssessmentGroupQuestions).ToList());
+
+        Loading = false;
+    }
+
+    public void Dispose() => Context.Dispose();
+
+    public async Task SaveConfig() 
+    {
+        try
+        {
+            if (SelectedConfig != null)
+            {
+                if (ValidateJson(SelectedConfig.JsonConfig))
+                {
+                    var result = await Dialog.ShowMessageBox("Confirm", "Are you sure you want to save this configuration?", yesText: "Save", cancelText: "Cancel") ?? false;
+                    if (result)
+                    {
+                        SelectedConfig.ModifiedDate = DateTime.Now;
+                        await Context.SaveChangesAsync();
+                        SnackBar.Add("Configuration saved successfully", Severity.Success);
+                    }
+                }
+                else
+                {
+                    SnackBar.Add("Configuration is not valid json", Severity.Error);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            SnackBar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+    }
+
+    public void RevertConfig(bool open) 
+    {
+        if (open)
+        {
+            return;
+        }
+
+        var hadChanges = Context.RevertChanges();
+
+        if (SelectedConfig != null && Context.Entry(SelectedConfig).State == EntityState.Detached)
+        {
+            Configs.Remove(SelectedConfig);
+            SelectedConfig = null;
+        }
+
+        if (hadChanges)
+        {
+            SnackBar.Add("Config changes were reverted", Severity.Info);
+        }
+    }
+
+    public async Task AddConfig() 
+    {
+        var options = new DialogOptions() 
+        { 
+            NoHeader = true,
+        };
+
+        var dialog = await Dialog.ShowAsync<PromptForNameModal>("New Configuration", options);  
+        var result = await dialog.Result;
+
+        if (result?.Data == null || result.Canceled)
+            return;
+
+        var newConfig = new PharmaAPIConfiguration()
+        {
+            Name = result.Data.ToString()!,
+            JsonConfig = $"{{{new string('\n', 2)}}}",
+            RecStatus = 1,
+            CreatedDate = DateTime.Now,
+        };
+
+        Context.RevertChanges();
+        Context.PharmaAPIConfiguration.Add(newConfig);
+        Configs.Add(newConfig);
+        SelectedConfig = newConfig;
+        await Task.Delay(100);
+        StateHasChanged();
+    }
+
+    public async Task ColumnNameAdornmentClick() 
+    {
+        var text = "This can be a path in either the original referral or the mapped referral. It can also be a constant value, or 'ReferralDate' to use the current days value.";
+        var dialogOptions = new DialogOptions() 
+        {
+            CloseOnEscapeKey = true
+        };
+
+        await Dialog.ShowMessageBox("Column Name Definition", text, options: dialogOptions);
+    }
+
+    public async Task AddAssessmentGroup()
+    {
+        var options = new DialogOptions()
+        {
+            NoHeader = true,
+        };
+
+        var dialog = await Dialog.ShowAsync<PromptForNameModal>("New Assessment Group", options);
+        var result = await dialog.Result;
+
+        if (result?.Data == null || result.Canceled)
+            return;
+
+        var newGroup = new AssessmentGroup()
+        {
+            TriageName = result.Data.ToString()!
+        };
+
+        Context.RevertChanges();
+        Context.AssessmentGroups.Add(newGroup);
+        AssessmentGroups.Add(newGroup);
+        SelectedAssessmentGroup = newGroup;
+        await Task.Delay(100);
+        StateHasChanged();
+    }
+
+    public async Task AddAssessmentGroupQuestion() 
+    {
+        if (SelectedAssessmentGroup == null)
+        {
+            return;
+        }
+
+        SelectedAssessmentGroup.AssessmentGroupQuestions.Add(new AssessmentGroupQuestion()
+        {
+            AssessmentGroup_Id = SelectedAssessmentGroup.Id,
+            ColumnName = "",
+            AssessmentName = "",
+            AssessmentQuestionName = "",
+        });
+
+        await Task.Delay(100);
+        StateHasChanged();
+    }
+
+    public async Task SaveAssessmentGroup() 
+    {
+        try
+        {
+            if (SelectedAssessmentGroup == null) 
+            {
+                return;
+            }
+
+            var result = await Dialog.ShowMessageBox("Confirm", "Are you sure you want to save this configuration?", yesText: "Save", cancelText: "Cancel") ?? false;
+            
+            if (result)
+            {
+                await Context.SaveChangesAsync();
+                SnackBar.Add("Assessment group saved successfully", Severity.Success);
+            }
+        }
+        catch (Exception ex)
+        {
+            SnackBar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+    }
+
+    public void RevertAssessmentGroup(bool open)
+    {
+        if (open)
+        {
+            return;
+        }
+
+        var hadChanges = Context.RevertChanges();
+
+        if (SelectedAssessmentGroup != null && Context.Entry(SelectedAssessmentGroup).State == EntityState.Detached)
+        {
+            AssessmentGroups.Remove(SelectedAssessmentGroup);
+            SelectedAssessmentGroup = null;
+        }
+
+        if (hadChanges)
+        {
+            SnackBar.Add("Assessment group changes were reverted", Severity.Info);
+        }
+    }
+
+    private bool ValidateJson(string json) 
+    {
+        try 
+        {
+            JsonSerializer.Deserialize<dynamic>(json);
+            return true;
+        } 
+        catch (JsonException) 
+        {
+            return false;
+        }
+    }
+}
+

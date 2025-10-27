@@ -1,11 +1,12 @@
 using ReportingDashboard.Components;
 using MudBlazor.Services;
-using ReportingDashboard.Data.Models;
-using ReportingDashboard.Data;
 using Microsoft.Extensions.Options;
 using MudBlazor;
 using Microsoft.AspNetCore.Authentication.Negotiate;
 using Microsoft.AspNetCore.Authorization;
+using ReportingDashboard.Data.Warehouse;
+using ReportingDashboard.Data.Jobs;
+using ReportingDashboard.Data;
 
 namespace ReportingDashboard
 {
@@ -27,9 +28,9 @@ namespace ReportingDashboard
             builder.Services.AddAuthorization(ConfigureRoles);
 
             builder.Services.Configure<AppSettings>(builder.Configuration.GetSection("ConnectionStrings"));
-            builder.Services.AddScoped<WarehouseContext>();
-            builder.Services.AddScoped<SSISContext>();
-            builder.Services.AddDbContextFactory<CaretendContext>(lifetime: ServiceLifetime.Scoped);
+            builder.Services.AddScoped<WarehouseDashboardContext>();
+            builder.Services.AddScoped<JobContext>();
+            builder.Services.AddDbContextFactory<WarehouseConfigContext>(lifetime: ServiceLifetime.Scoped);
             builder.Services.AddHttpClient();
 
             builder.Services.AddSingleton(new MudTheme()

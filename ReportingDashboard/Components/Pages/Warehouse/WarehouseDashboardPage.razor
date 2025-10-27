@@ -1,0 +1,332 @@
+﻿@page "/warehouse-dashboard"
+@using ReportingDashboard.Data.Warehouse
+@using ReportingDashboard.Data.Warehouse.Models
+
+@if(WarehouseLoad is not null) 
+{
+    <MudExpansionPanel>
+        <TitleContent>
+            <div class="flex-row">
+                @if (WarehouseLoad.LoadStatus == "Success")
+                {
+                    <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" />
+                }
+                else if (WarehouseLoad.LoadStatus == "Failed")
+                {
+                    <MudIcon Icon="@Icons.Material.Filled.Error" Color="Color.Error"/>
+                }
+                else
+                {
+                    <MudProgressCircular Size="Size.Small" Color="Color.Primary" Indeterminate />
+                }
+                <MudText Typo="Typo.h6" Class="ms-2">Most Recent Load</MudText>
+                <MudText Typo="Typo.subtitle2" Class="ms-2">@WarehouseLoad.EndDate?.ToLocalTime().ToString("M/d/yyyy h:mm tt")</MudText>
+            </div>
+        </TitleContent>
+        <ChildContent>
+            <MudTable Items="WarehouseLoad.Tables">
+                <HeaderContent>
+                    <MudTh>Table Name</MudTh>
+                    <MudTh>Start Date</MudTh>
+                    <MudTh>End Date</MudTh>
+                    <MudTh>
+                        <div class="flex-row">
+                            Load Status
+                            <MudSpacer />
+                            <MudIconButton Icon="@Icons.Material.Filled.Refresh" Color="Color.Primary" OnClick="StartTimer" />
+                        </div>
+                    </MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd>@context.TableName</MudTd>
+                    <MudTd>@context.StartDate.ToLocalTime()</MudTd>
+                    <MudTd>@context.EndDate?.ToLocalTime()</MudTd>
+                    <MudTd>
+                        @if(context.LoadStatus == "Success") 
+                        {
+                            <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" />
+                        }
+                        else if (context.LoadStatus == "Failed")
+                        {
+                            <MudIcon Icon="@Icons.Material.Filled.Error" Color="Color.Error" />
+                        } 
+                        else 
+                        {
+                            <MudProgressCircular Size="Size.Small" Color="Color.Primary" Indeterminate/>
+                        }
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
+        </ChildContent>
+    </MudExpansionPanel>
+
+    <MudExpansionPanel Expanded>
+        <TitleContent>
+            <div class="flex-row">
+                <MudIcon Icon="@Icons.Material.Filled.Timeline" Color="Color.Success" />
+                <MudText Typo="Typo.h6" Class="ms-2">Load Stats</MudText>
+            </div>
+        </TitleContent>
+        <ChildContent>
+            <MudGrid>
+                <MudItem xs="12">
+                    <MudCard Elevation="3">
+                        <MudCardHeader Class="flex-row">
+                            <MudSpacer />
+                            <MudText Typo="Typo.subtitle2">Most Recent Load</MudText>
+                            <MudSpacer />
+                        </MudCardHeader>
+                        <MudCardContent>
+                            <MudTimeSeriesChart 
+                                ChartSeries="@RecentLoadTimeSpan"
+                                LegendPosition="Position.Bottom" />
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+                <MudItem xs="8" Class="stacked-chart">
+                    <MudCard Elevation="3">
+                        <MudCardHeader Class="flex-row">
+                            <MudSpacer />
+                            <MudText Typo="Typo.subtitle2">Recent Loads</MudText>
+                            <MudSpacer />
+                        </MudCardHeader>
+                        <MudCardContent>
+                            <MudChart 
+                                ChartType="ChartType.StackedBar" 
+                                ChartSeries="@RecentLoadTimes" 
+                                XAxisLabels="@RecentLoadTimesLabels"
+                                LegendPosition="Position.Bottom"
+                                Title="Recent Loads" />
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+                <MudItem xs="4">
+                    <MudCard Elevation="3">
+                        <MudCardHeader Class="flex-row">
+                            <MudSpacer />
+                            <MudText Typo="Typo.subtitle2">Load Outcomes</MudText>
+                            <MudSpacer />
+                        </MudCardHeader>
+                        <MudCardContent>
+                            <MudChart InputData="@LoadOutcomes" InputLabels="@LoadOutcomeLabels" Title="Load Outcomes" ChartType="ChartType.Donut">
+                                <CustomGraphics>
+                                    <text class="donut-inner-text" x="50%" y="40%" dominant-baseline="middle" text-anchor="middle" font-size="2">Success</text>
+                                    <text class="donut-inner-text" x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="5">@($"{LoadOutcomeSuccessPercent}%")</text>
+                                </CustomGraphics>
+                            </MudChart>
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+            </MudGrid>
+        </ChildContent>
+    </MudExpansionPanel>
+}
+
+@code {
+    [Inject]
+    public required ISnackbar SnackBar { get; set; }
+
+    [Inject]
+    public required WarehouseDashboardContext Context { get; set; }
+
+    public MostRecentWarehouseLoad? WarehouseLoad { get; set; }
+
+    //Donut chart data
+    public double[] LoadOutcomes { get; set; } = [];
+    public string[] LoadOutcomeLabels { get; set; } = [];
+    public decimal LoadOutcomeSuccessPercent { get; set; }
+
+    //Stacked line chart data
+    public List<ChartSeries> RecentLoadTimes { get; set; } = [];
+    public string[] RecentLoadTimesLabels { get; set; } = [];
+    public ChartOptions RecentLoadTimesOptions { get; set; } = new ChartOptions()
+    {
+        XAxisLines = false
+    };
+
+    //Time series data
+    public List<TimeSeriesChartSeries> RecentLoadTimeSpan { get; set; } = [];
+    public string[] RecentLoadTimeSpanLabels { get; set; } = [];
+
+    private System.Timers.Timer _refreshTimer = new System.Timers.Timer()
+    { 
+        Interval = 5000
+    };
+
+    private int Count = 0;
+
+    protected override async Task OnInitializedAsync() 
+    {
+        WarehouseLoad = await GetMostRecentLoad();
+
+        (LoadOutcomes, LoadOutcomeLabels, LoadOutcomeSuccessPercent) = await GetLoadOutcomesChart();
+        (RecentLoadTimes, RecentLoadTimesLabels) = await GetRecentLoadsChart();
+        (RecentLoadTimeSpan, RecentLoadTimeSpanLabels) = GetRecentLoadTimeSpanChart();
+
+        _refreshTimer.Elapsed += async (sender, e) => 
+        {
+            WarehouseLoad = await GetMostRecentLoad();
+            Count++;
+            await InvokeAsync(StateHasChanged);
+
+            if (WarehouseLoad?.LoadStatus != "Running") 
+            {
+                _refreshTimer.Stop();
+            }
+        };
+        _refreshTimer.Start();
+    }
+
+    private void StartTimer() 
+    {
+        _refreshTimer.Start();
+        SnackBar.Add("Refresh Started", configure: x => 
+        {
+            x.Icon = Icons.Material.Outlined.Check;
+            x.VisibleStateDuration = 2000;
+        });
+    }
+
+    private async Task<MostRecentWarehouseLoad?> GetMostRecentLoad()
+    {
+        var dto = await Context.Connection.QueryAsync<MostRecentWarehouseLoadDTO>("SELECT * FROM AmberWarehouse.vMostRecentWarehouseLoad");
+        var warehouseLoad = dto.GroupBy(x => new MostRecentWarehouseLoad()
+        {
+            ProcessGuid = x.ProcessGuid,
+            StartDate = x.StartDate,
+            EndDate = x.EndDate,
+            LoadTime = x.LoadTimeSeconds,
+            LoadType = x.LoadType,
+            LoadStatus = x.LoadStatus
+        }).FirstOrDefault()?.Key;
+
+        foreach (var record in dto.OrderByDescending(x => x.TableLoadStartDate)) 
+        {
+            warehouseLoad?.Tables.Add(new WarehouseTableLoad() 
+            { 
+                TableName = record.TableName,
+                StartDate = record.TableLoadStartDate,
+                EndDate = record.TableLoadEndDate,
+                LoadStatus = record.TableLoadStatus,
+                LoadTime = record.TableLoadTimeSeconds
+            });
+        }
+
+        return warehouseLoad;
+    }
+
+    private async Task<(double[] data, string[] labels, decimal successPercent)> GetLoadOutcomesChart()
+    {
+        var warehouseLoads = await Context.Connection.QueryAsync<WarehouseLoad>("SELECT * FROM AmberWarehouse.WarehouseLoad");
+        var loadGroups = warehouseLoads.GroupBy(x => x.LoadStatus);
+
+        var successCount = loadGroups.FirstOrDefault(x => x.Key == "Success")?.Count() ?? 0;
+        var totalCount = warehouseLoads.Count();
+
+        return (loadGroups.Select(x => Convert.ToDouble(x.Count())).ToArray(), loadGroups.Select(x => x.Key).ToArray(), Math.Round(Decimal.Divide(successCount, totalCount) * 100, 2));
+    }
+
+    private async Task<(List<ChartSeries> chartData, string[] axisLabels)> GetRecentLoadsChart()
+    {
+        var recentWarehouseLoads = await Context.Connection.QueryAsync<RecentWarehouseLoadDTO>(@"
+SELECT
+	WarehouseLoad.ProcessGuid
+	,WarehouseLoad.LoadType
+	,WarehouseLoad.StartDate
+	,WarehouseTableLoad.TableName
+	,DATEDIFF(SECOND, WarehouseTableLoad.StartDate, WarehouseTableLoad.EndEnd) AS LoadTimeSeconds
+FROM
+	AmberWarehouse.WarehouseTableLoad
+	JOIN
+	(
+		SELECT TOP 10
+			ProcessGuid
+			,StartDate
+			,LoadType
+		FROM
+			AmberWarehouse.WarehouseLoad
+		ORDER BY
+			StartDate DESC
+	) WarehouseLoad ON WarehouseLoad.ProcessGuid = WarehouseTableLoad.ProcessGuid
+");
+
+        var tables = recentWarehouseLoads.Select(x => x.TableName).Distinct().ToList();
+        var loads = recentWarehouseLoads.GroupBy(x => (x.ProcessGuid, x.LoadType, x.StartDate)).Distinct().OrderBy(x => x.Key.StartDate).ToList();
+
+        var output = new List<ChartSeries>();
+
+        foreach (var table in tables) 
+        {
+            var tableData = new double[loads.Count];
+            for (int i = 0; i < loads.Count; i++) 
+            {
+                tableData[i] = loads[i].Where(x => x.TableName == table).FirstOrDefault()?.LoadTimeSeconds ?? 0;
+            }
+
+            output.Add(new ChartSeries()
+            {
+                Name = table,
+                Data = tableData
+            });
+        }
+
+        var axisLabels = loads.Select(x => $"{x.Key.StartDate.ToLocalTime().ToString("M/d")}").ToArray();
+
+        return (output, axisLabels);
+    }
+
+    public (List<TimeSeriesChartSeries> data, string[] labels) GetRecentLoadTimeSpanChart()
+    {
+        if (WarehouseLoad == null)
+        {
+            return ([], []);
+        }
+
+        var output = new List<TimeSeriesChartSeries>();
+        var index = 0;
+
+        var tableCount = WarehouseLoad.Tables.Count;
+
+        foreach (var tableLoad in WarehouseLoad.Tables) 
+        {
+            var dates = new List<DateTime?>() { tableLoad.StartDate, tableLoad.EndDate };
+            var shortName = tableLoad.TableName.Length > 20 ? tableLoad.TableName.Substring(0, 20) + "..." : tableLoad.TableName;
+
+            output.Add(new TimeSeriesChartSeries() 
+            {
+                Index = index,
+                Name = tableLoad.TableName,
+                Type = TimeSeriesDisplayType.Line,
+                Data = dates.Select(x => new TimeSeriesChartSeries.TimeValue(x ?? DateTime.UtcNow, tableCount - index)).ToList()
+            });
+
+            index++;
+        }
+
+        return (output, WarehouseLoad.Tables.Select(x => x.TableName).ToArray());
+    }
+
+    private class MostRecentWarehouseLoadDTO 
+    {
+        public Guid ProcessGuid { get; set; }
+        public DateTime StartDate { get; set; }
+        public DateTime? EndDate { get; set; }
+        public long? LoadTimeSeconds { get; set; }
+        public required string LoadType { get; set; }
+        public string? LoadStatus { get; set; }
+        public required string TableName { get; set; }
+        public DateTime TableLoadStartDate { get; set; }
+        public DateTime? TableLoadEndDate { get; set; }
+        public string? TableLoadStatus { get; set; }
+        public long? TableLoadTimeSeconds { get; set; }
+    }
+
+    private class RecentWarehouseLoadDTO 
+    {
+        public Guid ProcessGuid { get; set; }
+        public required string LoadType { get; set; }
+        public DateTime StartDate { get; set; }
+        public required string TableName { get; set; }
+        public long? LoadTimeSeconds { get; set; }
+    }
+}

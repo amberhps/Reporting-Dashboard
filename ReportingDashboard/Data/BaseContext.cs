@@ -1,5 +1,4 @@
 ﻿using Microsoft.Data.SqlClient;
-using ReportingDashboard.Data.Models;
 using System.Data;
 
 namespace ReportingDashboard.Data

@@ -1,4 +1,6 @@
-﻿@using ReportingDashboard.Data.Models.Warehouse
+﻿@using ReportingDashboard.Data.Warehouse
+@using ReportingDashboard.Data.Warehouse.Models
+
 <MudTable 
 Items="SalesPerson.SalesDesignations.OrderByDescending(x => x.EffectiveEndDate)"
 GroupBy="DesignationsGroups"
@@ -107,7 +109,7 @@ OnPreviewEditClick="OnEdit"
     public required SalesPerson SalesPerson { get; set; }
 
     [Parameter]
-    public required CaretendContext Context { get; set; }
+    public required WarehouseConfigContext Context { get; set; }
 
     [CascadingParameter] 
     public required IMudDialogInstance MudDialog { get; set; }
