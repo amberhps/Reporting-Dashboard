@@ -99,8 +99,6 @@ else
                 <MudTablePager />
             </PagerContent>
         </MudTable>
-
-        <MudText>Add Total row here</MudText>
     }
 }
 
@@ -180,14 +178,13 @@ else
 
         try
         {
-            await Task.Delay(5000, TokenSource.Token);
             Context.FiscalMonthSales = new Faker<SalesRecord>()
                 .RuleFor(x => x.Id, f => f.IndexGlobal)
                 .RuleFor(x => x.BilledDate, f => f.Date.Between(month.StartDate, month.EndDate))
                 .RuleFor(x => x.CarrierName, f => f.Company.CompanyName())
                 .RuleFor(x => x.InventoryItemName, f => f.Commerce.ProductName())
                 .RuleFor(x => x.ExpectedPrice, f => f.Finance.Amount())
-                .RuleFor(x => x.Cost, (f, x) => f.Finance.Amount(50, (decimal)x.ExpectedPrice))
+                .RuleFor(x => x.Cost, (f, x) => f.Finance.Amount(50, x.ExpectedPrice))
                 .RuleFor(x => x.AdjustmentAmount, f => f.Finance.Amount(-50, 50))
                 .RuleFor(x => x.GrossProfit, (f, x) => x.ExpectedPrice - x.Cost + x.AdjustmentAmount)
                 .Generate(_random.Next(1000, 2000));
@@ -314,14 +311,6 @@ else
 
             if (hasChanges)
             {
-                TotalSales = new SalesRecord()
-                {
-                    ExpectedPrice = TotalSales.ExpectedPrice - EditingRecordBackup.ExpectedPrice + salesRecord.ExpectedPrice,
-                    Cost = TotalSales.Cost - EditingRecordBackup.Cost + salesRecord.Cost,
-                    AdjustmentAmount = TotalSales.AdjustmentAmount - EditingRecordBackup.AdjustmentAmount + salesRecord.AdjustmentAmount,
-                    GrossProfit = TotalSales.GrossProfit - EditingRecordBackup.GrossProfit + salesRecord.GrossProfit
-                };
-
                 var dialog = await Dialog.ShowAsync<ChangeReasonModal>(
                     "Change Reason",
                     new DialogParameters() { { "Required", false } },
@@ -340,6 +329,15 @@ else
                 }
 
                 await Context.SaveChangesAsync();
+
+                TotalSales = new SalesRecord()
+                {
+                    ExpectedPrice = TotalSales.ExpectedPrice - EditingRecordBackup.ExpectedPrice + salesRecord.ExpectedPrice,
+                    Cost = TotalSales.Cost - EditingRecordBackup.Cost + salesRecord.Cost,
+                    AdjustmentAmount = TotalSales.AdjustmentAmount - EditingRecordBackup.AdjustmentAmount + salesRecord.AdjustmentAmount,
+                    GrossProfit = TotalSales.GrossProfit - EditingRecordBackup.GrossProfit + salesRecord.GrossProfit
+                };
+
                 await InvokeAsync(StateHasChanged);
             }
 
