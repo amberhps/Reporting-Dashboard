@@ -1,4 +1,5 @@
-﻿@inherits LayoutComponentBase
+﻿@using System.DirectoryServices
+@inherits LayoutComponentBase
 
 <MudThemeProvider @bind-IsDarkMode="IsDarkMode" Theme="Theme" />
 <MudDialogProvider />
@@ -35,6 +36,7 @@
                 <MudNavLink Href="/pharma-api-configuration" Icon="@Icons.Material.Rounded.Construction" IconColor="Color.Primary">Configuration</MudNavLink>
             </MudNavGroup>
             <MudNavLink Href="/jobs" Icon="@Icons.Material.Rounded.AccessTime">Jobs</MudNavLink>
+            <MudNavLink Href="/sales/audited-sales" Icon="@Icons.Material.Rounded.AttachMoney">Audited Sales</MudNavLink>
             <MudNavLink Icon="@Icons.Material.Rounded.Settings" IconColor="Color.Primary" Class="bottom-align" OnClick="ShowSettingsDialog">Settings</MudNavLink>
         </MudNavMenu>
     </MudDrawer>

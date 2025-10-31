@@ -1,0 +1,35 @@
+﻿<MudCard>
+    <MudForm @ref="Form">
+        <MudCardContent>
+            <MudTextField AutoGrow T="string" @bind-Value="Value" Required="Required" RequiredError="Please supply a value." AutoFocus Variant="Variant.Filled" />
+        </MudCardContent>
+        <MudCardActions>
+            <MudSpacer />
+            <MudButton Color="@Color.Primary" OnClick="OnCreate">Ok</MudButton>
+        </MudCardActions>
+    </MudForm>
+</MudCard>
+
+@code {
+    [CascadingParameter]
+    public required IMudDialogInstance MudDialog { get; set; }
+
+    [Parameter]
+    public bool Required { get; set; } = true;
+
+    public required MudForm Form { get; set; }
+
+    public string Value { get; set; } = "";
+
+    private async Task OnCreate()
+    {
+        await Form.Validate();
+
+        if (Form.IsValid)
+        {
+            MudDialog.Close(DialogResult.Ok(Value));
+        }
+    }
+
+    private void OnCancel() => MudDialog.Cancel();
+}

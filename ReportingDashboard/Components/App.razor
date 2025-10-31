@@ -9,6 +9,15 @@
     <link rel="stylesheet" href="@Assets["ReportingDashboard.styles.css"]" />
     <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" rel="stylesheet" />
     <link href="_content/MudBlazor/MudBlazor.min.css" rel="stylesheet" />
+    <script>
+        window.triggerFileDownload = (fileName, url) => {
+          const anchorElement = document.createElement('a');
+          anchorElement.href = url;
+          anchorElement.download = fileName ?? '';
+          anchorElement.click();
+          anchorElement.remove();
+        }
+    </script>
     <ImportMap />
     <HeadOutlet />
 </head>

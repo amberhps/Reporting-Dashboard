@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 using ReportingDashboard.Data.Warehouse;
 using ReportingDashboard.Data.Jobs;
 using ReportingDashboard.Data;
+using ReportingDashboard.Data.Sales;
 
 namespace ReportingDashboard
 {
@@ -30,7 +31,8 @@ namespace ReportingDashboard
             builder.Services.Configure<AppSettings>(builder.Configuration.GetSection("ConnectionStrings"));
             builder.Services.AddScoped<WarehouseDashboardContext>();
             builder.Services.AddScoped<JobContext>();
-            builder.Services.AddDbContextFactory<WarehouseConfigContext>(lifetime: ServiceLifetime.Scoped);
+            builder.Services.AddDbContextFactory<WarehouseConfigContext>(lifetime: ServiceLifetime.Scoped)
+                .AddDbContextFactory<SalesContext>(lifetime: ServiceLifetime.Scoped);
             builder.Services.AddHttpClient();
 
             builder.Services.AddSingleton(new MudTheme()
@@ -68,6 +70,13 @@ namespace ReportingDashboard
             app.MapStaticAssets();
             app.MapRazorComponents<App>()
                 .AddInteractiveServerRenderMode();
+
+            try
+            {
+                var env = app.Services.GetRequiredService<IWebHostEnvironment>();
+                Directory.CreateDirectory(Path.Combine(env.WebRootPath, "exports"));
+            }
+            catch { }
 
             app.Run();
         }
