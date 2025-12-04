@@ -9,6 +9,8 @@
             <MudStack Row>
                 <MudText>Pharma API</MudText>
                 <MudIcon Icon="@PharmaIcon" Color="@PharmaIconColor" Title="@PharmaIconTitle" />
+                <MudSpacer/>
+                <MudText Class="me-2">@(AppSettings.PharmaAPI)</MudText>
             </MudStack>
         </TitleContent>
         <ChildContent>
@@ -20,6 +22,8 @@
             <MudStack Row>
                 <MudText>Pharma API Background Jobs</MudText>
                 <MudIcon Icon="@JobIcon" Color="@JobIconColor" Title="@JobIconTitle" />
+                <MudSpacer />
+                <MudText Class="me-2">@(AppSettings.BackgroundJobs)</MudText>
             </MudStack>
         </TitleContent>
         <ChildContent>

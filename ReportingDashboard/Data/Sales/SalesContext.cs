@@ -6,7 +6,7 @@ using ReportingDashboard.Data.Sales.Models;
 
 namespace ReportingDashboard.Data.Sales
 {
-    public class SalesContext(IOptionsSnapshot<AppSettings> settingSnapshot, ILogger<SalesContext> logger, ILoggerFactory loggerFactory) : BaseDbContext
+    public class SalesContext(IOptionsSnapshot<AppSettings> settingSnapshot) : BaseDbContext
     {
         public DbSet<AuditLog> AuditLogs { get; set; }
         public DbSet<SalesRecord> FiscalMonthSales { get; set; }

@@ -77,9 +77,7 @@
                             <MudSpacer />
                         </MudCardHeader>
                         <MudCardContent>
-                            <MudTimeSeriesChart 
-                                ChartSeries="@RecentLoadTimeSpan"
-                                LegendPosition="Position.Bottom" />
+                            <MudTimeSeriesChart ChartSeries="@RecentLoadTimeSpan" ChartOptions="@HideLegendOptions" />
                         </MudCardContent>
                     </MudCard>
                 </MudItem>
@@ -95,8 +93,7 @@
                                 ChartType="ChartType.StackedBar" 
                                 ChartSeries="@RecentLoadTimes" 
                                 XAxisLabels="@RecentLoadTimesLabels"
-                                LegendPosition="Position.Bottom"
-                                Title="Recent Loads" />
+                                ChartOptions="@HideLegendOptions" />
                         </MudCardContent>
                     </MudCard>
                 </MudItem>
@@ -108,10 +105,10 @@
                             <MudSpacer />
                         </MudCardHeader>
                         <MudCardContent>
-                            <MudChart InputData="@LoadOutcomes" InputLabels="@LoadOutcomeLabels" Title="Load Outcomes" ChartType="ChartType.Donut">
+                            <MudChart InputData="@LoadOutcomes" InputLabels="@LoadOutcomeLabels" ChartType="ChartType.Donut">
                                 <CustomGraphics>
-                                    <text class="donut-inner-text" x="50%" y="40%" dominant-baseline="middle" text-anchor="middle" font-size="2">Success</text>
-                                    <text class="donut-inner-text" x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="5">@($"{LoadOutcomeSuccessPercent}%")</text>
+                                    <text class="donut-inner-text" x="50%" y="40%" dominant-baseline="middle" text-anchor="middle" font-size="20">Success</text>
+                                    <text class="donut-inner-text" x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="40">@($"{LoadOutcomeSuccessPercent}%")</text>
                                 </CustomGraphics>
                             </MudChart>
                         </MudCardContent>
@@ -139,14 +136,14 @@
     //Stacked line chart data
     public List<ChartSeries> RecentLoadTimes { get; set; } = [];
     public string[] RecentLoadTimesLabels { get; set; } = [];
-    public ChartOptions RecentLoadTimesOptions { get; set; } = new ChartOptions()
-    {
-        XAxisLines = false
-    };
 
     //Time series data
     public List<TimeSeriesChartSeries> RecentLoadTimeSpan { get; set; } = [];
-    public string[] RecentLoadTimeSpanLabels { get; set; } = [];
+
+    public ChartOptions HideLegendOptions { get; set; } = new ChartOptions()
+    {
+        ShowLegend = false
+    };
 
     private System.Timers.Timer _refreshTimer = new System.Timers.Timer()
     { 
@@ -161,7 +158,7 @@
 
         (LoadOutcomes, LoadOutcomeLabels, LoadOutcomeSuccessPercent) = await GetLoadOutcomesChart();
         (RecentLoadTimes, RecentLoadTimesLabels) = await GetRecentLoadsChart();
-        (RecentLoadTimeSpan, RecentLoadTimeSpanLabels) = GetRecentLoadTimeSpanChart();
+        RecentLoadTimeSpan= GetRecentLoadTimeSpanChart();
 
         _refreshTimer.Elapsed += async (sender, e) => 
         {
@@ -266,7 +263,8 @@ FROM
             output.Add(new ChartSeries()
             {
                 Name = table,
-                Data = tableData
+                Data = tableData,
+                DataMarkerTooltipTitleFormat = table
             });
         }
 
@@ -275,11 +273,11 @@ FROM
         return (output, axisLabels);
     }
 
-    public (List<TimeSeriesChartSeries> data, string[] labels) GetRecentLoadTimeSpanChart()
+    public List<TimeSeriesChartSeries> GetRecentLoadTimeSpanChart()
     {
         if (WarehouseLoad == null)
         {
-            return ([], []);
+            return [];
         }
 
         var output = new List<TimeSeriesChartSeries>();
@@ -290,20 +288,20 @@ FROM
         foreach (var tableLoad in WarehouseLoad.Tables) 
         {
             var dates = new List<DateTime?>() { tableLoad.StartDate, tableLoad.EndDate };
-            var shortName = tableLoad.TableName.Length > 20 ? tableLoad.TableName.Substring(0, 20) + "..." : tableLoad.TableName;
 
             output.Add(new TimeSeriesChartSeries() 
             {
                 Index = index,
                 Name = tableLoad.TableName,
-                Type = TimeSeriesDisplayType.Line,
-                Data = dates.Select(x => new TimeSeriesChartSeries.TimeValue(x ?? DateTime.UtcNow, tableCount - index)).ToList()
+                LineDisplayType = LineDisplayType.Line,
+                Data = dates.Select(x => new TimeSeriesChartSeries.TimeValue(x ?? DateTime.UtcNow, tableCount - index)).ToList(),
+                DataMarkerTooltipTitleFormat = tableLoad.TableName
             });
 
             index++;
         }
 
-        return (output, WarehouseLoad.Tables.Select(x => x.TableName).ToArray());
+        return output;
     }
 
     private class MostRecentWarehouseLoadDTO 
