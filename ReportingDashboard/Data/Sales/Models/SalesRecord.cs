@@ -1,4 +1,6 @@
-﻿namespace ReportingDashboard.Data.Sales.Models
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
+namespace ReportingDashboard.Data.Sales.Models
 {
     public class SalesRecord
     {
@@ -11,7 +13,10 @@
         public decimal AdjustmentAmount { get; set; }
         public decimal GrossProfit { get; set; }
 
+        [NotMapped]
         public bool IsError => ExpectedPrice - Cost + AdjustmentAmount != GrossProfit;
+
+        public List<AuditLog> AuditLogs { get; set; } = [];
 
     }
 }

@@ -8,12 +8,13 @@ using ReportingDashboard.Data.Warehouse;
 using ReportingDashboard.Data.Jobs;
 using ReportingDashboard.Data;
 using ReportingDashboard.Data.Sales;
+using ReportingDashboard.Data.Sales.Models;
 
 namespace ReportingDashboard
 {
     public class Program
     {
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
 
@@ -75,6 +76,25 @@ namespace ReportingDashboard
             {
                 var env = app.Services.GetRequiredService<IWebHostEnvironment>();
                 Directory.CreateDirectory(Path.Combine(env.WebRootPath, "exports"));
+            }
+            catch { }
+
+            try
+            {
+                using var scope = app.Services.CreateScope();
+                using var salesContext = scope.ServiceProvider.GetRequiredService<SalesContext>();
+
+                var fiscalMonths = await salesContext.GetFiscalMonthsAsync();
+                var currentFiscalMonths = salesContext.FiscalMonths.Select(f => f.Id).ToList();
+
+                salesContext.FiscalMonths.AddRange(fiscalMonths.Where(f => !currentFiscalMonths.Contains(f.Id)));
+                using (var transaction = salesContext.Database.BeginTransaction())
+                {
+                    await salesContext.EnableIdentityInsert<FiscalMonth>();
+                    await salesContext.SaveChangesAsync();
+                    await salesContext.DisableIdentityInsert<FiscalMonth>();
+                    transaction.Commit();
+                }
             }
             catch { }
 

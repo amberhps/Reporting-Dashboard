@@ -8,5 +8,6 @@
         public required string BackgroundJobs { get; init; }
         public required string PharmaAPI { get; init; }
         public required string OldWarehouse { get; init; }
+        public required string Sales { get; init; }
     }
 }

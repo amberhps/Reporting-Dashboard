@@ -26,5 +26,21 @@ namespace ReportingDashboard.Data
 
             return changes.Count > 0;
         }
+
+        public async Task EnableIdentityInsert<T>() => await SetIdentityInsert<T>(true);
+        public async Task DisableIdentityInsert<T>() => await SetIdentityInsert<T>(false);
+
+        private async Task SetIdentityInsert<T>(bool enable)
+        {
+            var entityType = Model.FindEntityType(typeof(T));
+            var value = enable ? "ON" : "OFF";
+
+            if (entityType == null)
+                return;
+
+            var command = $"SET IDENTITY_INSERT {entityType.GetSchema()}.{entityType.GetTableName()} {value}";
+
+            await Database.ExecuteSqlRawAsync(command);
+        }
     }
 }

@@ -4,13 +4,14 @@
 @using ReportingDashboard.Data.Sales.Models
 @using Bogus
 @using ReportingDashboard.Services
+@using System.Linq.Expressions
 
 @if (SelectedFiscalMonth == null && !IsLoadingFiscalMonth)
 {
     <MudStack Row Class="pt-3">
         <MudSpacer />
         <MudSelect T="FiscalMonth" ValueChanged="OnFiscalMonthChanged" Value="SelectedFiscalMonth" Disabled="IsLoadingFiscalMonth" Placeholder="Select Fiscal Month">
-            @foreach (var month in Context.FiscalMonths)
+            @foreach (var month in FiscalMonths)
             {
                 <MudSelectItem T="FiscalMonth" Value="month">
                     <MudStack Row Spacing="1" Justify="Justify.SpaceBetween">
@@ -36,7 +37,7 @@ else
         <MudText Typo="Typo.subtitle1">@($"{SelectedFiscalMonth?.StartDate:MM/dd/yyyy} - {SelectedFiscalMonth?.EndDate:MM/dd/yyyy}")</MudText>
         <MudMenu Dense Icon="@Icons.Material.Rounded.MoreHoriz" Disabled="@IsLoadingFiscalMonth">
             <MudMenuItem Icon="@Icons.Material.Rounded.Download" OnClick="async () => await OnExportPeriodDataAsync()">Export Excel</MudMenuItem>
-            <MudMenuItem Icon="@Icons.Material.Rounded.Refresh" OnClick="() => OnFiscalMonthChanged(SelectedFiscalMonth)">Refresh Data</MudMenuItem>
+            <MudMenuItem Icon="@Icons.Material.Rounded.Refresh" OnClick="() => Table.ReloadServerData()">Refresh Data</MudMenuItem>
             @if (!SelectedFiscalMonth.IsClosed)
             {
                 <MudDivider Light />
@@ -45,61 +46,55 @@ else
         </MudMenu>
     </MudStack>
 
-    if (IsLoadingFiscalMonth)
-    {
-        <MudProgressLinear Indeterminate Color="Color.Primary" />
-    } 
-    else
-    {
-        <MudDivider Class="mb-3"/>
-        <MudTable T="SalesRecord" ServerData="LoadPaginatedFiscalSales" CanCancelEdit RowEditPreview="OnEdit" RowEditCancel="OnCancel" RowEditCommit="async (x) => await OnCommit(x)" @ref="Table" Dense ReadOnly="SelectedFiscalMonth!.IsClosed">
-            <HeaderContent>
-                <MudTh><MudTableSortLabel T="SalesRecord" SortLabel="BilledDate">Billed Date</MudTableSortLabel></MudTh>
-                <MudTh><MudTableSortLabel T="SalesRecord" SortLabel="CarrierName">Carrier Name</MudTableSortLabel></MudTh>
-                <MudTh><MudTableSortLabel T="SalesRecord" SortLabel="InventoryItemName">Inventory Item Name</MudTableSortLabel></MudTh>
-                <MudTh><MudTableSortLabel T="SalesRecord" SortLabel="ExpectedPrice">Expected Price</MudTableSortLabel></MudTh>
-                <MudTh><MudTableSortLabel T="SalesRecord" SortLabel="Cost">Cost</MudTableSortLabel></MudTh>
-                <MudTh><MudTableSortLabel T="SalesRecord" SortLabel="AdjustmentAmount">Adjustment Amount</MudTableSortLabel></MudTh>
-                <MudTh><MudTableSortLabel T="SalesRecord" SortLabel="GrossProfit">Gross Profit</MudTableSortLabel></MudTh>
-            </HeaderContent>
-            <RowTemplate>
-                <MudTd>@context.BilledDate.ToString("MM/dd/yyyy")</MudTd>
-                <MudTd>@context.CarrierName</MudTd>
-                <MudTd>@context.InventoryItemName</MudTd>
-                <MudTd><MudText Color="@(context.ExpectedPrice < 0 ? Color.Error : Color.Inherit)">@context.ExpectedPrice.ToString("C")</MudText></MudTd>
-                <MudTd><MudText Color="@(context.Cost < 0 ? Color.Error : Color.Inherit)">@context.Cost.ToString("C")</MudText></MudTd>
-                <MudTd><MudText Color="@(context.AdjustmentAmount < 0 ? Color.Error : Color.Inherit)">@context.AdjustmentAmount.ToString("C")</MudText></MudTd>
-                <MudTd>
-                    <MudStack Row>
-                        <MudText Color="@(context.GrossProfit < 0 ? Color.Error : Color.Inherit)">@context.GrossProfit.ToString("C")</MudText>
-                        <MudSpacer />
-                        <MudIcon Icon="@(context.IsError? Icons.Material.Rounded.Warning : "")" Color="Color.Warning" Title="Expected - Cost + Adjustment != Gross Profit" />
-                    </MudStack>
-                </MudTd>
-            </RowTemplate>
-            <RowEditingTemplate>
-                <MudTd>@context.BilledDate.ToString("MM/dd/yyyy")</MudTd>
-                <MudTd>@context.CarrierName</MudTd>
-                <MudTd>@context.InventoryItemName</MudTd>
-                <MudTd><MudNumericField @bind-Value=context.ExpectedPrice></MudNumericField></MudTd>
-                <MudTd><MudNumericField @bind-Value=context.Cost></MudNumericField></MudTd>
-                <MudTd><MudNumericField @bind-Value=context.AdjustmentAmount></MudNumericField></MudTd>
-                <MudTd><MudNumericField @bind-Value=context.GrossProfit></MudNumericField></MudTd>
-            </RowEditingTemplate>
-            <FooterContent>
-                <MudTd>Totals:</MudTd>
-                <MudTd></MudTd>
-                <MudTd></MudTd>
-                <MudTd><MudText Color="@(TotalSales.ExpectedPrice < 0 ? Color.Error : Color.Inherit)">@TotalSales.ExpectedPrice.ToString("C")</MudText></MudTd>
-                <MudTd><MudText Color="@(TotalSales.Cost < 0 ? Color.Error : Color.Inherit)">@TotalSales.Cost.ToString("C")</MudText></MudTd>
-                <MudTd><MudText Color="@(TotalSales.AdjustmentAmount < 0 ? Color.Error : Color.Inherit)">@TotalSales.AdjustmentAmount.ToString("C")</MudText></MudTd>
-                <MudTd><MudText Color="@(TotalSales.GrossProfit < 0 ? Color.Error : Color.Inherit)">@TotalSales.GrossProfit.ToString("C")</MudText></MudTd>
-            </FooterContent>
-            <PagerContent>
-                <MudTablePager />
-            </PagerContent>
-        </MudTable>
-    }
+    <MudDivider Class="mb-3"/>
+
+    <MudTable T="SalesRecord" ServerData="LoadPaginatedFiscalSales" CanCancelEdit RowEditPreview="OnEdit" RowEditCancel="OnCancel" RowEditCommit="async (x) => await OnCommit(x)" @ref="Table" Dense ReadOnly="SelectedFiscalMonth!.IsClosed">
+        <HeaderContent>
+            <MudTh><MudTableSortLabel T="SalesRecord" SortLabel="BilledDate">Billed Date</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel T="SalesRecord" SortLabel="CarrierName">Carrier Name</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel T="SalesRecord" SortLabel="InventoryItemName">Inventory Item Name</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel T="SalesRecord" SortLabel="ExpectedPrice">Expected Price</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel T="SalesRecord" SortLabel="Cost">Cost</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel T="SalesRecord" SortLabel="AdjustmentAmount">Adjustment Amount</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel T="SalesRecord" SortLabel="GrossProfit">Gross Profit</MudTableSortLabel></MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd>@context.BilledDate.ToString("MM/dd/yyyy")</MudTd>
+            <MudTd>@context.CarrierName</MudTd>
+            <MudTd>@context.InventoryItemName</MudTd>
+            <MudTd><MudText Color="@(context.ExpectedPrice < 0 ? Color.Error : Color.Inherit)">@context.ExpectedPrice.ToString("C")</MudText></MudTd>
+            <MudTd><MudText Color="@(context.Cost < 0 ? Color.Error : Color.Inherit)">@context.Cost.ToString("C")</MudText></MudTd>
+            <MudTd><MudText Color="@(context.AdjustmentAmount < 0 ? Color.Error : Color.Inherit)">@context.AdjustmentAmount.ToString("C")</MudText></MudTd>
+            <MudTd>
+                <MudStack Row>
+                    <MudText Color="@(context.GrossProfit < 0 ? Color.Error : Color.Inherit)">@context.GrossProfit.ToString("C")</MudText>
+                    <MudSpacer />
+                    <MudIcon Icon="@(context.IsError? Icons.Material.Rounded.Warning : "")" Color="Color.Warning" Title="Expected - Cost + Adjustment != Gross Profit" />
+                </MudStack>
+            </MudTd>
+        </RowTemplate>
+        <RowEditingTemplate>
+            <MudTd>@context.BilledDate.ToString("MM/dd/yyyy")</MudTd>
+            <MudTd>@context.CarrierName</MudTd>
+            <MudTd>@context.InventoryItemName</MudTd>
+            <MudTd><MudNumericField @bind-Value=context.ExpectedPrice></MudNumericField></MudTd>
+            <MudTd><MudNumericField @bind-Value=context.Cost></MudNumericField></MudTd>
+            <MudTd><MudNumericField @bind-Value=context.AdjustmentAmount></MudNumericField></MudTd>
+            <MudTd><MudNumericField @bind-Value=context.GrossProfit></MudNumericField></MudTd>
+        </RowEditingTemplate>
+        <FooterContent>
+            <MudTd>Totals:</MudTd>
+            <MudTd></MudTd>
+            <MudTd></MudTd>
+            <MudTd><MudText Color="@(TotalSales.ExpectedPrice < 0 ? Color.Error : Color.Inherit)">@TotalSales.ExpectedPrice.ToString("C")</MudText></MudTd>
+            <MudTd><MudText Color="@(TotalSales.Cost < 0 ? Color.Error : Color.Inherit)">@TotalSales.Cost.ToString("C")</MudText></MudTd>
+            <MudTd><MudText Color="@(TotalSales.AdjustmentAmount < 0 ? Color.Error : Color.Inherit)">@TotalSales.AdjustmentAmount.ToString("C")</MudText></MudTd>
+            <MudTd><MudText Color="@(TotalSales.GrossProfit < 0 ? Color.Error : Color.Inherit)">@TotalSales.GrossProfit.ToString("C")</MudText></MudTd>
+        </FooterContent>
+        <PagerContent>
+            <MudTablePager />
+        </PagerContent>
+    </MudTable>
 }
 
 
@@ -126,6 +121,8 @@ else
     private CancellationTokenSource TokenSource = new();
     private string CurrentUserName = string.Empty;
 
+    private List<FiscalMonth> FiscalMonths = new();
+
     private FiscalMonth? SelectedFiscalMonth;
     private bool IsLoadingFiscalMonth = false;
 
@@ -136,7 +133,7 @@ else
     private SalesRecord? EditingRecordBackup;
     private string SearchTerm = string.Empty;
 
-    private Dictionary<string, Func<SalesRecord, object>> SortSelectors = new()
+    private Dictionary<string, Expression<Func<SalesRecord, object>>> SortSelectors = new()
     {
         ["BilledDate"] = x => x.BilledDate,
         ["CarrierName"] = x => x.CarrierName,
@@ -146,8 +143,6 @@ else
         ["AdjustmentAmount"] = x => x.AdjustmentAmount,
         ["GrossProfit"] = x => x.GrossProfit
     };
-
-    private readonly Random _random = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -159,52 +154,28 @@ else
             CurrentUserName = user.Identity.Name?.Split("\\", 2)[1] ?? "Unknown User";
         }
 
-        Context.FiscalMonths = await Context.GetFiscalMonthsAsync(TokenSource.Token);
-
-        foreach (var month in Context.FiscalMonths)
-        {
-            if (_random.Next(1, 100) < 50)
-            {
-                month.IsClosed = true;
-            }
-
-        }
+        var currentFiscalYear = await Context.GetCurrentFiscalYearAsync();
+        FiscalMonths = await Context.FiscalMonths.Where(x => x.Year <= currentFiscalYear && x.Year >= currentFiscalYear - 1).ToListAsync();
     }
 
-    public async Task OnFiscalMonthChanged(FiscalMonth month)
+    public void OnFiscalMonthChanged(FiscalMonth month)
     {
-        IsLoadingFiscalMonth = true;
         SelectedFiscalMonth = month;
-
-        try
-        {
-            Context.FiscalMonthSales = new Faker<SalesRecord>()
-                .RuleFor(x => x.Id, f => f.IndexGlobal)
-                .RuleFor(x => x.BilledDate, f => f.Date.Between(month.StartDate, month.EndDate))
-                .RuleFor(x => x.CarrierName, f => f.Company.CompanyName())
-                .RuleFor(x => x.InventoryItemName, f => f.Commerce.ProductName())
-                .RuleFor(x => x.ExpectedPrice, f => f.Finance.Amount())
-                .RuleFor(x => x.Cost, (f, x) => f.Finance.Amount(50, x.ExpectedPrice))
-                .RuleFor(x => x.AdjustmentAmount, f => f.Finance.Amount(-50, 50))
-                .RuleFor(x => x.GrossProfit, (f, x) => x.ExpectedPrice - x.Cost + x.AdjustmentAmount)
-                .Generate(_random.Next(1000, 2000));
-        }
-        catch (TaskCanceledException) { }
-        finally
-        {
-            IsLoadingFiscalMonth = false;
-            await InvokeAsync(StateHasChanged);
-        }
+        StateHasChanged();
     }
 
     private async Task<TableData<SalesRecord>> LoadPaginatedFiscalSales(TableState state, CancellationToken token)
     {
+        IsLoadingFiscalMonth = true;
+        await InvokeAsync(StateHasChanged);
+
         var cts = CancellationTokenSource.CreateLinkedTokenSource(token, TokenSource.Token);
 
         try
         {
             TableState = state;
-            var data = BuildSalesEnumerable(state);
+            IEnumerable<SalesRecord> data = BuildSalesEnumerable(state).ToList(); //ToList here to force a single query execution
+
             TotalSales = new SalesRecord()
             {
                 ExpectedPrice = data.Sum(x => x.ExpectedPrice),
@@ -222,18 +193,26 @@ else
         catch
         {
             return new TableData<SalesRecord>() { TotalItems = 0, Items = [] };
+        } 
+        finally
+        {
+            IsLoadingFiscalMonth = false;
+            await InvokeAsync(StateHasChanged);
         }
     }
 
     private IEnumerable<SalesRecord> BuildSalesEnumerable(TableState state)
     {
-        var data = Context.FiscalMonthSales.AsEnumerable();
+        if (SelectedFiscalMonth == null)
+            return Enumerable.Empty<SalesRecord>();
+
+        var data = Context.FiscalMonthSales
+            .Where(x => x.BilledDate >= SelectedFiscalMonth.StartDate && x.BilledDate <= SelectedFiscalMonth.EndDate);
 
         if (!string.IsNullOrEmpty(SearchTerm))
         {
-            data = data.Where(x =>
-                x.CarrierName.Contains(SearchTerm, StringComparison.OrdinalIgnoreCase) ||
-                x.InventoryItemName.Contains(SearchTerm, StringComparison.OrdinalIgnoreCase));
+            data = data.Where(x => EF.Functions.Like(x.CarrierName, $"%{SearchTerm}%") ||
+                                   EF.Functions.Like(x.InventoryItemName, $"%{SearchTerm}%"));
         }
 
         if (!string.IsNullOrEmpty(state.SortLabel) && SortSelectors.TryGetValue(state.SortLabel, out var selector))
@@ -286,25 +265,27 @@ else
             var auditLogs = new List<AuditLog>();
             var hasChanges = false;
 
-            foreach (var prop in entityType.GetProperties())
+            var now = DateTime.UtcNow;
+
+            foreach (var prop in entityType.GetProperties(BindingFlags.Public | BindingFlags.Instance))
             {
+                var propType = prop.PropertyType;
+
                 var oldValue = prop.GetValue(EditingRecordBackup);
                 var newValue = prop.GetValue(salesRecord);
 
-                if (!oldValue?.Equals(newValue) ?? true)
+                if (!oldValue?.ToString()?.Equals(newValue?.ToString()) ?? false)
                 {
                     hasChanges = true;
 
                     auditLogs.Add(new AuditLog
                     {
-                        Id = Context.AuditLogs.Count + 1,
                         EntityName = entityName,
-                        EntityId = entityId,
                         PropertyName = prop.Name,
                         OldValue = oldValue?.ToString(),
                         NewValue = newValue?.ToString(),
                         ChangedBy = CurrentUserName,
-                        ChangedAt = DateTime.UtcNow
+                        ChangedAt = now,
                     });
                 }
             }
@@ -313,7 +294,7 @@ else
             {
                 var dialog = await Dialog.ShowAsync<ChangeReasonModal>(
                     "Change Reason",
-                    new DialogParameters() { { "Required", false } },
+                    new DialogParameters() { { nameof(ChangeReasonModal.Required), false } },
                     new DialogOptions() { MaxWidth = MaxWidth.Medium, FullWidth = true }
                 );
 
@@ -324,9 +305,10 @@ else
                     foreach (var auditLog in auditLogs)
                     {
                         auditLog.ChangeReason = result.Data?.ToString() ?? "";
-                        Context.AuditLogs.Add(auditLog);
                     }
                 }
+
+                salesRecord.AuditLogs.AddRange(auditLogs);
 
                 await Context.SaveChangesAsync();
 
@@ -369,6 +351,7 @@ else
         if (SelectedFiscalMonth != null)
         {
             SelectedFiscalMonth.IsClosed = true;
+            Context.SaveChanges();
         }
     }
 
@@ -382,7 +365,7 @@ else
         var filePath = Path.Combine(Environment.WebRootPath, "exports", fileName);
         var fileUrl = $"{baseUri}exports/{fileName}";
 
-        ExcelExporter.ExportToExcel(BuildSalesEnumerable(TableState), filePath, SelectedFiscalMonth.Name, ["Id"]);
+        ExcelExporter.ExportToExcel(BuildSalesEnumerable(TableState), filePath, SelectedFiscalMonth.Name, [nameof(SalesRecord.Id), nameof(SalesRecord.AuditLogs), nameof(SalesRecord.IsError)]);
 
         await JS.InvokeVoidAsync("triggerFileDownload", $"AuditedSales_{SelectedFiscalMonth.StartDate:yyyyMMdd}-{SelectedFiscalMonth.EndDate:yyyyMMdd}.xlsx", fileUrl);
 

@@ -22,10 +22,6 @@ namespace ReportingDashboard.Data.Warehouse
 
         public DbSet<AssessmentGroup> AssessmentGroups { get; set; }
 
-        public DbSet<ContainerGroup> ContainerGroups { get; set; }
-
-        public DbSet<Field> ContainerFields { get; set; }
-
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<ServiceAreaDesignation>()
@@ -79,14 +75,6 @@ namespace ReportingDashboard.Data.Warehouse
 
             modelBuilder.Entity<AssessmentGroupQuestion>()
                 .ToTable("AssessmentGroupQuestions", "PharmaAPI")
-                .HasKey(x => x.Id);
-
-            modelBuilder.Entity<ContainerGroup>()
-                .ToTable("ContinerGroup", "Common")
-                .HasKey(x => x.Id);
-
-            modelBuilder.Entity<Field>()
-                .ToView("vField", "Common")
                 .HasKey(x => x.Id);
         }
 
