@@ -28,15 +28,15 @@
     <MudDrawer @bind-Open="IsDrawerOpen" ClipMode="DrawerClipMode.Always" Elevation="4" Variant="DrawerVariant.Mini">
         <MudNavMenu Class="nav-menu">
             <MudNavGroup Title="Warehouse" Icon="@Icons.Material.Rounded.House" HideExpandIcon="@(!IsDrawerOpen)">
-                <MudNavLink Href="/warehouse-dashboard" Icon="@Icons.Material.Rounded.DashboardCustomize" IconColor="Color.Primary">Dashboard</MudNavLink>
-                <MudNavLink Href="/warehouse-configuration" Icon="@Icons.Material.Rounded.Construction" IconColor="Color.Primary">Configuration</MudNavLink>
+                <MudNavLink Href="/warehouse/dashboard" Icon="@Icons.Material.Rounded.DashboardCustomize" IconColor="Color.Primary">Dashboard</MudNavLink>
+                <MudNavLink Href="/warehouse/configuration" Icon="@Icons.Material.Rounded.Construction" IconColor="Color.Primary">Configuration</MudNavLink>
             </MudNavGroup>
             <MudNavGroup Title="Pharma API" Icon="@Icons.Material.Rounded.Api" HideExpandIcon="@(!IsDrawerOpen)">
-                <MudNavLink Href="/pharma-api-dashboard" Icon="@Icons.Material.Rounded.DashboardCustomize" IconColor="Color.Primary">Dashboard</MudNavLink>
-                <MudNavLink Href="/pharma-api-configuration" Icon="@Icons.Material.Rounded.Construction" IconColor="Color.Primary">Configuration</MudNavLink>
+                <MudNavLink Href="/pharma-api/dashboard" Icon="@Icons.Material.Rounded.DashboardCustomize" IconColor="Color.Primary">Dashboard</MudNavLink>
+                <MudNavLink Href="/pharma-api/configuration" Icon="@Icons.Material.Rounded.Construction" IconColor="Color.Primary">Configuration</MudNavLink>
             </MudNavGroup>
             <MudNavLink Href="/jobs" Icon="@Icons.Material.Rounded.AccessTime">Jobs</MudNavLink>
-            <MudNavLink Href="/sales/audited-sales" Icon="@Icons.Material.Rounded.AttachMoney">Audited Sales</MudNavLink>
+            <MudNavLink Href="/sales/audited" Icon="@Icons.Material.Rounded.AttachMoney">Audited Sales</MudNavLink>
             <MudNavLink Icon="@Icons.Material.Rounded.Settings" IconColor="Color.Primary" Class="bottom-align" OnClick="ShowSettingsDialog">Settings</MudNavLink>
         </MudNavMenu>
     </MudDrawer>

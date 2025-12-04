@@ -6,9 +6,9 @@ using Microsoft.AspNetCore.Authentication.Negotiate;
 using Microsoft.AspNetCore.Authorization;
 using ReportingDashboard.Data.Warehouse;
 using ReportingDashboard.Data.Jobs;
-using ReportingDashboard.Data;
 using ReportingDashboard.Data.Sales;
 using ReportingDashboard.Data.Sales.Models;
+using ReportingDashboard.Data.Common;
 
 namespace ReportingDashboard
 {
@@ -18,7 +18,7 @@ namespace ReportingDashboard
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            builder.Configuration.AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: false, reloadOnChange: true);
+            builder.Configuration.AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true);
 
             // Add services to the container.
             builder.Services.AddRazorComponents()
@@ -31,7 +31,7 @@ namespace ReportingDashboard
 
             builder.Services.AddAuthorization(ConfigureRoles);
 
-            builder.Services.Configure<AppSettings>(builder.Configuration.GetSection("ConnectionStrings"));
+            builder.Services.Configure<ConnectionStrings>(builder.Configuration.GetSection("ConnectionStrings"));
             builder.Services.AddScoped<WarehouseDashboardContext>();
             builder.Services.AddScoped<JobContext>();
             builder.Services.AddDbContextFactory<WarehouseConfigContext>(lifetime: ServiceLifetime.Scoped)

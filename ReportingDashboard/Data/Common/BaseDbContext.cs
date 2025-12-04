@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 
-namespace ReportingDashboard.Data
+namespace ReportingDashboard.Data.Common
 {
     public class BaseDbContext : DbContext
     {

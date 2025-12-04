@@ -1,6 +1,6 @@
-﻿namespace ReportingDashboard.Data
+﻿namespace ReportingDashboard.Data.Common
 {
-    public class AppSettings
+    public class ConnectionStrings
     {
         public required string Warehouse { get; init; }
         public required string CareTend { get; init; }

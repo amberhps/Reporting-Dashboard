@@ -1,12 +1,13 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using ReportingDashboard.Data.Caretend.Models;
+using ReportingDashboard.Data.Common;
 using ReportingDashboard.Data.PharmaAPI.Models;
 using ReportingDashboard.Data.Warehouse.Models;
 
 namespace ReportingDashboard.Data.Warehouse
 {
-    public class WarehouseConfigContext(IOptionsSnapshot<AppSettings> settingSnapshot) : BaseDbContext
+    public class WarehouseConfigContext(IOptionsSnapshot<ConnectionStrings> settingSnapshot) : BaseDbContext
     {
         public DbSet<ServiceAreaDesignation> ServiceAreaDesignations { get; set; }
 

@@ -2,11 +2,12 @@
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using ReportingDashboard.Data.Common;
 using ReportingDashboard.Data.Sales.Models;
 
 namespace ReportingDashboard.Data.Sales
 {
-    public class SalesContext(IOptionsSnapshot<AppSettings> settingSnapshot) : BaseDbContext
+    public class SalesContext(IOptionsSnapshot<ConnectionStrings> settingSnapshot) : BaseDbContext
     {
         public DbSet<AuditLog> AuditLogs { get; set; }
         public DbSet<SalesRecord> FiscalMonthSales { get; set; }

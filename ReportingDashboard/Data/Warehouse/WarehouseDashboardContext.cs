@@ -1,11 +1,12 @@
 ﻿using Dapper;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Options;
+using ReportingDashboard.Data.Common;
 using System.Data;
 
 namespace ReportingDashboard.Data.Warehouse
 {
-    public class WarehouseDashboardContext(IOptionsSnapshot<AppSettings> settingSnapshot) : BaseContext
+    public class WarehouseDashboardContext(IOptionsSnapshot<ConnectionStrings> settingSnapshot) : BaseContext
     {
         public override IDbConnection Connection 
         {
