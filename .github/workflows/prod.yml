@@ -52,13 +52,13 @@ jobs:
           WMSPASS:   ${{ secrets.WEBDEPLOY_PASSWORD }}
           SITE_NAME: ${{ vars.IIS_SITE_NAME }}
         run: |
-          $msdeploy = "C:\Program Files\IIS\Microsoft Web Deploy V3\msdeploy.exe" &
-          $msdeploy -verb:sync `
-            -source:package="app.zip" `
-            -dest:contentPath="$env:SITE_NAME",
-                  computerName="https://$env:WMSSERVER:8172/msdeploy.axd?site=$env:SITE_NAME",
-                  userName="$env:WMSUSER",
-                  password="$env:WMSPASS",
-                  authType="Basic" `
-            -enableRule:DoNotDeleteRule
-    
+          $msdeploy = "C:\Program Files\IIS\Microsoft Web Deploy V3\msdeploy.exe"
+          
+          $args = @(
+            "-verb:sync"
+            "-source:package=""app.zip"""
+            "-dest:contentPath=""$env:SITE_NAME"",computerName=""https://$env:WMSSERVER:8172/msdeploy.axd?site=$env:SITE_NAME"",userName=""$env:WMSUSER"",password=""$env:WMSPASS"",authType=""Basic"""
+            "-enableRule:DoNotDeleteRule"
+          )
+          
+          Start-Process -FilePath $msdeploy -ArgumentList $args -Wait -NoNewWindow
