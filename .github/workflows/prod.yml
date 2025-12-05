@@ -38,6 +38,7 @@ jobs:
   deploy:
     runs-on: [self-hosted, Windows]
     environment: prod
+    needs: build
     steps:
       - name: Download Artifact
         uses: actions/download-artifact@v4
