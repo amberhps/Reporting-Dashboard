@@ -44,7 +44,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: app-${{ github.sha }}
-          path: app.zip
+          path: .
           
       - name: Deploy to IIS
         env:
@@ -55,7 +55,7 @@ jobs:
         run: |
           $args = @(
             "-verb:sync"
-            "-source:package=""app.zip\app.zip"""
+            "-source:package=""app.zip"""
             "-dest:contentPath=""$env:SITE_NAME"",computerName=""https://$env:WMSSERVER:8172/msdeploy.axd?site=$env:SITE_NAME"",userName=""$env:WMSUSER"",password=""$env:WMSPASS"",authType=""Basic"""
             "-enableRule:DoNotDeleteRule"
           )
