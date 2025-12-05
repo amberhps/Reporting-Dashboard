@@ -57,7 +57,7 @@ jobs:
           $args = @(
             "-verb:sync"
             "-source:package=app.zip"
-            "-dest:contentPath=""$env:SITE_NAME"",computerName=""https://$($env:WMSSERVER):8172/msdeploy.axd"",userName=""$env:WMSUSER"",password=""$env:WMSPASS"",authType=""Basic"""
+            "-dest:contentPath=""$env:SITE_NAME"",computerName=""https://$($env:WMSSERVER):8172/msdeploy.axd?site=$env:SITE_NAME"",userName=""$env:WMSUSER"",password=""$env:WMSPASS"",authType=""Basic"""
             "-enableRule:DoNotDeleteRule"
             "-allowUntrusted"
           )
