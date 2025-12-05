@@ -1,0 +1,64 @@
+name: Build and Deploy to IIS using Web Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --configuration Release --no-restore
+
+      - name: Publish project
+        run: dotnet publish -c Release -o ./published
+        
+      - name: Zip project
+        run: Compress-Archive -Path published\* -DestinationPath app.zip -Force
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-${{ github.sha }}
+          path: app.zip
+          
+  deploy:
+    runs-on: [self-hosted, Windows]
+    environment: prod
+    steps:
+      - name: Download Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: app-${{ github.sha }}
+          path: app.zip
+          
+      - name: Deploy to IIS
+        env:
+          WMSSERVER: ${{ vars.WEBDEPLOY_SERVER })
+          WMSUSER:   ${{ vars.WEBDEPLOY_USERNAME }}
+          WMSPASS:   ${{ secrets.WEBDEPLOY_PASSWORD }}
+          SITE_NAME: ${{ vars.IIS_SITE_NAME }}
+        run: |
+          $msdeploy = "C:\Program Files\IIS\Microsoft Web Deploy V3\msdeploy.exe" &
+          $msdeploy -verb:sync `
+            -source:package="app.zip" `
+            -dest:contentPath="$env:SITE_NAME",
+                  computerName="https://$env:WMSSERVER:8172/msdeploy.axd?site=$env:SITE_NAME",
+                  userName="$env:WMSUSER",
+                  password="$env:WMSPASS",
+                  authType="Basic" `
+            -enableRule:DoNotDeleteRule
+    
