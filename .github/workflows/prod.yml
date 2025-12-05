@@ -57,8 +57,9 @@ jobs:
           $args = @(
             "-verb:sync"
             "-source:package=app.zip"
-            "-dest:contentPath=""$env:SITE_NAME"",computerName=""https://$($env:WMSSERVER):8172/msdeploy.axd"",userName=""$env:WMSUSER"",password=""$env:WMSPASS"",authType=""Basic"",allowUntrusted=true"
+            "-dest:contentPath=""$env:SITE_NAME"",computerName=""https://$($env:WMSSERVER):8172/msdeploy.axd"",userName=""$env:WMSUSER"",password=""$env:WMSPASS"",authType=""Basic"""
             "-enableRule:DoNotDeleteRule"
+            "-allowUntrusted"
           )
           
           Start-Process -FilePath $msdeploy -ArgumentList $args -Wait -NoNewWindow
