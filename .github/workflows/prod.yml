@@ -47,7 +47,7 @@ jobs:
           
       - name: Deploy to IIS
         env:
-          WMSSERVER: ${{ vars.WEBDEPLOY_SERVER })
+          WMSSERVER: ${{ vars.WEBDEPLOY_SERVER }}
           WMSUSER:   ${{ vars.WEBDEPLOY_USERNAME }}
           WMSPASS:   ${{ secrets.WEBDEPLOY_PASSWORD }}
           SITE_NAME: ${{ vars.IIS_SITE_NAME }}
