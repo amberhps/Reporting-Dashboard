@@ -24,10 +24,10 @@ jobs:
         run: dotnet build --configuration Release --no-restore
 
       - name: Publish project
-        run: dotnet publish -c Release -o ./published
+        run: dotnet publish .\ReportingDashboard -c Release -o .\published
         
       - name: Zip project
-        run: Compress-Archive -Path published\* -DestinationPath app.zip -Force
+        run: Compress-Archive -Path .\published\* -DestinationPath app.zip -Force
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
