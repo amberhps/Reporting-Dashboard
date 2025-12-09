@@ -77,7 +77,11 @@
                             <MudSpacer />
                         </MudCardHeader>
                         <MudCardContent>
-                            <MudTimeSeriesChart ChartSeries="@RecentLoadTimeSpan" ChartOptions="@HideLegendOptions" />
+                            <MudTimeSeriesChart 
+                                ChartSeries="@RecentLoadTimeSpan" 
+                                ChartOptions="@HideLegendOptions" 
+                                Height="100%" 
+                                Width="100%" />
                         </MudCardContent>
                     </MudCard>
                 </MudItem>
@@ -89,7 +93,9 @@
                             <MudSpacer />
                         </MudCardHeader>
                         <MudCardContent>
-                            <MudChart 
+                            <MudChart
+                                Height = "100%"
+                                Width = "100%"
                                 ChartType="ChartType.StackedBar" 
                                 ChartSeries="@RecentLoadTimes" 
                                 XAxisLabels="@RecentLoadTimesLabels"
@@ -105,7 +111,7 @@
                             <MudSpacer />
                         </MudCardHeader>
                         <MudCardContent>
-                            <MudChart InputData="@LoadOutcomes" InputLabels="@LoadOutcomeLabels" ChartType="ChartType.Donut">
+                            <MudChart InputData="@LoadOutcomes" InputLabels="@LoadOutcomeLabels" ChartType="ChartType.Donut" Height="100%" Width="100%">
                                 <CustomGraphics>
                                     <text class="donut-inner-text" x="50%" y="40%" dominant-baseline="middle" text-anchor="middle" font-size="20">Success</text>
                                     <text class="donut-inner-text" x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="40">@($"{LoadOutcomeSuccessPercent}%")</text>
