@@ -1,4 +1,5 @@
 ﻿@page "/jobs"
+@using Microsoft.Data.SqlClient
 @using ReportingDashboard.Data.Jobs
 @using ReportingDashboard.Data.Jobs.Models
 
@@ -46,12 +47,17 @@
 
     protected override async Task OnInitializedAsync()
     {
-        var missing = await Context.Connection.QueryAsync<MissingSSISRun>(
-            "MissedSSISRuns", 
-            commandType: System.Data.CommandType.StoredProcedure
-        );
-
-        MissingSSISRuns = missing.OrderByDescending(x => x.MissedRunDate).ToList();
-        _loading = false;
+        try
+        {
+            var missing = await Context.GetMissedJobRuns(NavigationToken);
+            MissingSSISRuns = missing.OrderByDescending(x => x.MissedRunDate).ToList();
+        }
+        catch (TaskCanceledException) { }
+        catch (OperationCanceledException) { }
+        catch (SqlException e) when (e.Message.EndsWith("Operation cancelled by user.")) { }
+        finally
+        {
+            _loading = false;
+        }
     }
 }

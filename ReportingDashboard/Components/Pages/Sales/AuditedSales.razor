@@ -1,10 +1,9 @@
 ﻿@page "/sales/audited"
 
+@using System.Linq.Expressions
 @using ReportingDashboard.Data.Sales
 @using ReportingDashboard.Data.Sales.Models
-@using Bogus
 @using ReportingDashboard.Services
-@using System.Linq.Expressions
 
 @if (SelectedFiscalMonth == null && !IsLoadingFiscalMonth)
 {

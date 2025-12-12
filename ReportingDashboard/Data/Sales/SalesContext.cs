@@ -50,7 +50,7 @@ namespace ReportingDashboard.Data.Sales
 
         protected override void OnConfiguring(DbContextOptionsBuilder options)
         {
-            options.UseSqlServer(settingSnapshot.Value.Sales);
+            options.UseSqlServer(settingSnapshot.Value.Config);
         }
 
         public async Task<List<FiscalMonth>> GetFiscalMonthsAsync()

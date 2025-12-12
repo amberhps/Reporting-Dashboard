@@ -8,8 +8,6 @@ namespace ReportingDashboard.Data.Common
         protected SqlConnection? _connection;
         private IDbTransaction? _transaction;
 
-        private bool _disposed = false;
-
         public abstract IDbConnection Connection { get; }
         public IDbTransaction? Transaction => _transaction;
         public IDbTransaction BeginTransaction() => _transaction ??= Connection.BeginTransaction();
@@ -30,39 +28,13 @@ namespace ReportingDashboard.Data.Common
 
         public virtual void Dispose()
         {
-            InternalDispose(true);
+            _transaction?.Dispose();
+            _connection?.Dispose();
+
+            _transaction = null;
+            _connection = null;
+
             GC.SuppressFinalize(this);
-        }
-
-        protected void InternalDispose(bool disposing)
-        {
-            if (_disposed)
-                return;
-
-            if (!disposing)
-            {
-                _disposed = true;
-                return;
-            }
-
-            if (_transaction != null)
-            {
-                _transaction.Dispose();
-                _transaction = null;
-            }
-
-            if (_connection != null)
-            {
-                _connection.Dispose();
-                _connection = null;
-            }
-
-            _disposed = true;
-        }
-
-        ~BaseContext()
-        {
-            InternalDispose(false);
         }
     }
 }

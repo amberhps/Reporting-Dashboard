@@ -1,13 +1,11 @@
-﻿namespace ReportingDashboard.Data.Common
+﻿namespace ReportingDashboard.Data.Common;
+
+public class ConnectionStrings
 {
-    public class ConnectionStrings
-    {
-        public required string Warehouse { get; init; }
-        public required string CareTend { get; init; }
-        public required string SSIS { get; init; }
-        public required string BackgroundJobs { get; init; }
-        public required string PharmaAPI { get; init; }
-        public required string OldWarehouse { get; init; }
-        public required string Sales { get; init; }
-    }
+    public required string Warehouse { get; init; }
+    public required string CareTend { get; init; }
+    public required string BackgroundJobs { get; init; }
+    public required string PharmaAPI { get; init; }
+    public required string OldWarehouse { get; init; }
+    public required string Config { get; init; }
 }
