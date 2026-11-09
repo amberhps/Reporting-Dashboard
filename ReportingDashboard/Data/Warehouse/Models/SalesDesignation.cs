@@ -1,5 +1,4 @@
-﻿using Microsoft.Identity.Client;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ReportingDashboard.Data.Warehouse.Models
 {
