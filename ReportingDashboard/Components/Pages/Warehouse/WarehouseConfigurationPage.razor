@@ -347,7 +347,7 @@
 
     private async Task DeleteServiceArea(ServiceAreaDesignation serviceArea)
     {
-        var result = await Dialog.ShowMessageBox("Warning", "Are you sure you want to delete this entry?", yesText: "Proceed", cancelText: "Cancel") ?? false;
+        var result = await Dialog.ShowMessageBoxAsync("Warning", "Are you sure you want to delete this entry?", yesText: "Proceed", cancelText: "Cancel") ?? false;
 
         if (!result) 
         {
@@ -422,7 +422,7 @@
 
     private async Task DeleteTeam(TeamDesignation team)
     {
-        var result = await Dialog.ShowMessageBox("Warning", "Are you sure you want to delete this entry?", yesText: "Proceed", cancelText: "Cancel") ?? false;
+        var result = await Dialog.ShowMessageBoxAsync("Warning", "Are you sure you want to delete this entry?", yesText: "Proceed", cancelText: "Cancel") ?? false;
 
         if (!result)
         {
@@ -497,7 +497,7 @@
 
     private async Task DeleteTherapyType(TherapyTypeDesignation team)
     {
-        var result = await Dialog.ShowMessageBox("Warning", "Are you sure you want to delete this entry?", yesText: "Proceed", cancelText: "Cancel") ?? false;
+        var result = await Dialog.ShowMessageBoxAsync("Warning", "Are you sure you want to delete this entry?", yesText: "Proceed", cancelText: "Cancel") ?? false;
 
         if (!result)
         {
@@ -604,7 +604,7 @@
 
     private async Task DeleteSalesPerson(SalesPerson salesPerson)
     {
-        var result = await Dialog.ShowMessageBox("Warning", "Are you sure you want to delete this entry?", yesText: "Proceed", cancelText: "Cancel") ?? false;
+        var result = await Dialog.ShowMessageBoxAsync("Warning", "Are you sure you want to delete this entry?", yesText: "Proceed", cancelText: "Cancel") ?? false;
 
         if (!result)
         {
