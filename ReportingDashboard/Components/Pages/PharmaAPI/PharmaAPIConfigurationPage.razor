@@ -135,7 +135,7 @@
             {
                 if (ValidateJson(SelectedConfig.JsonConfig))
                 {
-                    var result = await Dialog.ShowMessageBox("Confirm", "Are you sure you want to save this configuration?", yesText: "Save", cancelText: "Cancel") ?? false;
+                    var result = await Dialog.ShowMessageBoxAsync("Confirm", "Are you sure you want to save this configuration?", yesText: "Save", cancelText: "Cancel") ?? false;
                     if (result)
                     {
                         SelectedConfig.ModifiedDate = DateTime.Now;
@@ -213,7 +213,7 @@
             CloseOnEscapeKey = true
         };
 
-        await Dialog.ShowMessageBox("Column Name Definition", text, options: dialogOptions);
+        await Dialog.ShowMessageBoxAsync("Column Name Definition", text, options: dialogOptions);
     }
 
     public async Task AddAssessmentGroup()
@@ -270,7 +270,7 @@
                 return;
             }
 
-            var result = await Dialog.ShowMessageBox("Confirm", "Are you sure you want to save this configuration?", yesText: "Save", cancelText: "Cancel") ?? false;
+            var result = await Dialog.ShowMessageBoxAsync("Confirm", "Are you sure you want to save this configuration?", yesText: "Save", cancelText: "Cancel") ?? false;
             
             if (result)
             {
